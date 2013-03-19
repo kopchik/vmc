@@ -14,7 +14,7 @@ import time
 import sys
 import os
 
-__version__ = 4
+__version__ = 5
 
 DEBUG = True
 CONFIGS = list(map(os.path.expanduser, ['~/kvmc.cfg', '/etc/kvmc.cfg']))
@@ -226,14 +226,21 @@ if __name__ == '__main__':
   os.unsetenv('TMUX')
   tmux = TMUX()
 
-  parser = argparse.ArgumentParser(description='KVM commander')
+  parser = argparse.ArgumentParser(
+    description='KVM commander version %s' % __version__)
   parser.add_argument('-d', '--debug', action='store_true',
                       default=False, help="enable debug output")
   parser.add_argument('-c', '--config', help="path to config file")
+  parser.add_argument('-v', '-V', '--version', action='store_true',
+                      default=False, help="get software version")
   parser.add_argument('cmd', default="status", nargs="*",
     help="command to execute")
   args = parser.parse_args()
   print(args)
+
+  if args.version:
+    print("Software version:", __version__)
+    sys.exit()
 
   if args.debug:
     log.verbosity = "debug"
