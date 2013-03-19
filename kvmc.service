@@ -1,0 +1,13 @@
+[Unit]
+Description=Map Caps to Escape in Console
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/kvmc start all
+
+ExecStop=/usr/local/bin/kvmc shutdown all
+ExecStop=/usr/local/bin/kvmc wait all timeout=3
+ExecStop=/usr/local/bin/kvmc kill all
+
+[Install]
+WantedBy=network.target
