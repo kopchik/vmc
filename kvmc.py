@@ -42,7 +42,7 @@ class KVM(metaclass=MetaKVM):
   cores = 1
   cpu = "qemu64"
   runas = None
-  tmux = TMUX(socket="virt")
+  tmux = TMUX(socket="virt", session="KVM")
   template = True
 
   def __init__(self):
