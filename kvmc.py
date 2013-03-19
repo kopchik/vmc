@@ -208,9 +208,9 @@ class CMD(CLI):
     @command("[name] console")
     def do_console(self, name=None):
         print("attaching", name)
-        if name and not instances[name].is_running():
+        if name and not self.instances[name].is_running():
                 sys.exit("Instance is not started")
-        instances[name].tmux.attach(name=name)
+        self.instances[name].tmux.attach(name=name)
 
     @command("status")
     def do_status(self):
