@@ -163,13 +163,14 @@ class Bridged:
 
 
 class Drive:
-  def __init__(self, path, cache="writeback"):
-    self.path = path
+  def __init__(self, path, iface="virtio", cache="writeback"):
+    self.path  = path
     self.cache = cache
+    self.iface = iface
 
   def __str__(self):
-    cmd = "-drive file={path},cache={cache}" \
-          .format(path=self.path, cache=self.cache)
+    cmd = "-drive file={path},iface={iface},cache={cache}" \
+          .format(path=self.path, iface=self.iface, cache=self.cache)
     return cmd
 
 
