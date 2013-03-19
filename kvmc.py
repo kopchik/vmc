@@ -32,8 +32,8 @@ class MetaKVM(type):
   def __init__(cls, name, bases, ns):
     global kvms
     if not ns.get('template', False):
-      assert name.lower() not in kvms, "duplicate name: %s" % name
-      kvms[name.lower()] = cls()
+      assert name not in kvms, "duplicate name: %s" % name
+      kvms[name] = cls()
 
 
 class KVM(metaclass=MetaKVM):
