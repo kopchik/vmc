@@ -16,7 +16,7 @@ class Default(KVM):
 class lor(Default):
   mem = 2048
   net = [Bridged(nic="lor", model='virtio', mac="52:54:16:12:34:66", br="intbr")]
-  drives = [Drive("/home/exe/lor.qcow2", cache="unsafe")]
+  drives = [Drive("/home/exe/lor.qcow2", iface="ide", cache="unsafe")]
 
 
 if __name__ == '__main__':
