@@ -169,7 +169,7 @@ class Drive:
     self.iface = iface
 
   def __str__(self):
-    cmd = "-drive file={path},iface={iface},cache={cache}" \
+    cmd = "-drive file={path},if={iface},cache={cache}" \
           .format(path=self.path, iface=self.iface, cache=self.cache)
     return cmd
 
