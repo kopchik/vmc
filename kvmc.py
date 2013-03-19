@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from exeutilz.cli import CLI, command
+from useful.cli  import CLI, command
 from useful.tmux import TMUX
 from useful.log import Log
 
@@ -13,7 +13,7 @@ import time
 import sys
 import os
 
-__version__ = 6
+__version__ = 7
 CONFIGS = list(map(os.path.expanduser, ['~/kvmc.cfg', '/etc/kvmc.cfg']))
 BUF_SIZE = 65535
 log = Log("KVMC")
@@ -182,6 +182,19 @@ class CMD(CLI):
         for kvm in self.instances:
             print(kvm)
 
+    @command("start all")
+    def do_start_all(self):
+        sleep = 0
+        log.debug("starting all stopped instances")
+        for instance in self.instances.values():
+            time.sleep(sleep)
+            if instance.is_running():
+                log.debug("skipping %s because it is already started" % instance)
+                continue
+            log.info("Starting %s" % instance)
+            instance.start()
+            sleep = 3
+
     @command("[name] start")
     @command("start [name]")
     def do_start(self, name=None):
@@ -190,55 +203,49 @@ class CMD(CLI):
         print("Starting %s" % name)
         self.instances[name].start()
 
-    @command("start all")
-    def do_start_all(self):
-        log.debug("starting all stopped instances")
-        for instance in self.instances.values():
-            if instance.is_running():
-                log.debug("skipping %s because it is already started" % instance)
-                continue
-            log.info("Starting %s" % instance)
-            instance.start()
-            sleep = instance.sleep
-
-    @command("console")
     @command("console [name]")
     @command("[name] console")
     def do_console(self, name=None):
         print("attaching", name)
         if name and not instances[name].is_running():
                 sys.exit("Instance is not started")
-        tmux.attach(name=name)
+        instances[name].tmux.attach(name=name)
 
     @command("status")
     def do_status(self):
         for instance in self.instances.values():
             instance.print_status()
 
-    @command("kill all") #TODO: doesnt work
-    def do_kill_all(self):
-        for instance in self.instances.values():
-            instance.kill()
+    @command("shutdown all")
+    def do_shutdown(self, name=None):
+      for instance in self.instances.values():
+        if instance.is_running():
+          instance.shutdown()
 
     @command("[name] shutdown")
     @command("shutdown [name]")
     def do_shutdown(self, name=None):
         self.instances[name].shutdown()
 
+    @command("kill all")
+    def do_kill_all(self):
+        for instance in self.instances.values():
+            instance.kill()
+
     @command("[name] kill")
     @command("kill [name]")
     def do_kill(self, name=None):
-        instances[name].kill()
+        self.instances[name].kill()
 
     @command("[name] reboot")
     @command("reboot [name]")
     def do_reboot(self, name=None):
-        instances[name].reboot()
+        self.instances[name].reboot()
 
     @command("[name] reset")
     @command("reset [name]")
     def do_reset(self, name=None):
-        instances[name].reset()
+        self.instances[name].reset()
 
 
 def main():
@@ -264,4 +271,4 @@ def main():
     CONFIGS = [args.config]
 
   cmd = CMD(kvms)
-  cmd.run_cmd(args.cmd)
+  cmd.run_cmd(" ".join(args.cmd))

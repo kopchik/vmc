@@ -2,7 +2,6 @@
 
 from kvmc import KVM, Bridged, Drive, main
 
-
 class Default(KVM):
   mem   = 384
   cpu   = "phenom"
@@ -20,4 +19,5 @@ class LOR(Default):
   drives = [Drive("/home/exe/lor.qcow2", cache="unsafe")]
 
 
-main()
+if __name__ == '__main__':
+  main()
