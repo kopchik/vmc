@@ -254,10 +254,9 @@ def main():
     description='KVM commander version %s' % __version__)
   parser.add_argument('-d', '--debug', action='store_true',
                       default=False, help="enable debug output")
-  parser.add_argument('-c', '--config', help="path to config file")
   parser.add_argument('-v', '-V', '--version', action='store_true',
                       default=False, help="get software version")
-  parser.add_argument('cmd', default="status", nargs="*",
+  parser.add_argument('cmd', default=["status"], nargs="*",
     help="command to execute")
   args = parser.parse_args()
   print("arguments:", args, file=sys.stderr)
@@ -268,8 +267,6 @@ def main():
   if args.debug:
     log.verbosity = "debug"
 
-  if args.config:
-    CONFIGS = [args.config]
-
   cmd = CMD(kvms)
+  print(args.cmd, " ".join(args.cmd))
   cmd.run_cmd(" ".join(args.cmd))
