@@ -146,7 +146,7 @@ class KVM(metaclass=MetaKVM):
     print ("  status:", status)
 
   def __repr__(self):
-    return "<KVM(name=\"{name}\")>".format(name=self.name)
+    return "KVM(\"{name}\")".format(name=self.name)
 
 
 class Bridged:
@@ -192,12 +192,8 @@ class CMD(CLI):
 
     @command("start all")
     def do_start_all(self):
-        log.debug("starting all not started instances")
-        sleep = 0
+        log.debug("starting all stopped instances")
         for instance in self.instances.values():
-            if sleep:
-                log.debug("sleeping for %s before launching another instance" % sleep)
-            time.sleep(sleep)
             if instance.is_running():
                 log.debug("skipping %s because it is already started" % instance)
                 continue
