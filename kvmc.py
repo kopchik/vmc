@@ -238,6 +238,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='KVM commander')
   parser.add_argument('-d', '--debug', action='store_true',
                       default=False, help="enable debug output")
+  parser.add_argument('-c', '--config', help="path to config file")
   parser.add_argument('cmd', default="status", nargs="*",
     help="command to execute")
   args =  parser.parse_args()
@@ -245,6 +246,9 @@ if __name__ == '__main__':
 
   if args.debug:
     log.verbosity = "debug"
+
+  if args.config:
+    CONFIGS = [args.config]
 
   config = configparser.ConfigParser()
   for cfgfile in CONFIGS:
