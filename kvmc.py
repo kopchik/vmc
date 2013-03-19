@@ -268,5 +268,4 @@ def main():
     log.verbosity = "debug"
 
   cmd = CMD(kvms)
-  print(args.cmd, " ".join(args.cmd))
   cmd.run_cmd(" ".join(args.cmd))
