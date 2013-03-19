@@ -2,6 +2,7 @@
 import exeutilz; exeutilz.exeutilz_minver(1.75)
 from exeutilz.cli import CLI, command
 from useful.tmux import TMUX
+from useful.small import run
 from useful.log import Log
 import configparser
 import subprocess
@@ -38,9 +39,6 @@ def fatal_error(error, errno=1):
     log.error(error)
     sys.exit(errno)
 
-def run(cmd):
-    cmd = shlex.split(cmd)
-    subprocess.check_call(cmd)
 
 
 class KVM(CLI):
