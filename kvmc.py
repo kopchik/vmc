@@ -65,7 +65,7 @@ class KVM(CLI):
           pid = int(open(self.pidfile).readline().strip())
         except IOError as err:
           if err.errno == errno.EACCES:
-            raise StatusUnknown("cannot read peadfile:", err)
+            raise StatusUnknown("cannot read pidfile:", err)
           elif err.errno == errno.ENOENT:
             return False
           raise
