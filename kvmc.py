@@ -269,3 +269,30 @@ def main():
 
   cmd = CMD(kvms)
   cmd.run_cmd(" ".join(args.cmd))
+  @command("wait all timeout [timeout]")
+  def do_wait_all(self, timeout):
+    timeout = int(timeout)
+    t = 0
+    while True:
+      running = 0
+      for inst in self.instances.values():
+        if inst.is_running():
+          running = 1
+      if not running:
+        break
+      time.sleep(1)
+      t += 1
+      if t > timeout:
+        raise TimeoutError("instances still running")
+      print('.', end='', file=sys.stderr)
+
+  @command("graceful stop timeout [timeout]")
+  def do_graceful(self, timeout):
+    timeout = int(timeout)
+    self.do_shutdown_all()
+    try:
+      self.do_wait_all(timeout)
+    except TimeoutError:
+      self.log.critical("kvms still running: %s" \
+        % list(filter(lambda x: x.is_running(), self.instances.values())))
+      self.do_kill_all()
