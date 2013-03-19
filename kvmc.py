@@ -175,100 +175,80 @@ class Drive:
 
 
 class CMD(CLI):
-    def __init__(self, instances):
-        self.instances = instances
+  def __init__(self, instances):
+      self.instances = instances
+      self.log = Log("CMD")
 
-    @command("list")
-    def do_list(self):
-        for kvm in self.instances:
-            print(kvm)
+  @command("list")
+  def do_list(self):
+      for kvm in self.instances:
+          print(kvm)
 
-    @command("start all")
-    def do_start_all(self):
-        sleep = 0
-        log.debug("starting all stopped instances")
-        for instance in self.instances.values():
-            time.sleep(sleep)
-            if instance.is_running():
-                log.debug("skipping %s because it is already started" % instance)
-                continue
-            log.info("Starting %s" % instance)
-            instance.start()
-            sleep = 3
+  @command("start all")
+  def do_start_all(self):
+    sleep = 0
+    log.debug("starting all stopped instances")
+    for instance in self.instances.values():
+      time.sleep(sleep)
+      if instance.is_running():
+        log.debug("skipping %s because it is already started" % instance)
+        continue
+      log.info("Starting %s" % instance)
+      instance.start()
+      sleep = 3
 
-    @command("[name] start")
-    @command("start [name]")
-    def do_start(self, name=None):
-        if name not in self.instances:
-            fatal_error("no such instance: %s" % name)
-        print("Starting %s" % name)
-        self.instances[name].start()
+  @command("[name] start")
+  @command("start [name]")
+  def do_start(self, name=None):
+    if name not in self.instances:
+      fatal_error("no such instance: %s" % name)
+    print("Starting %s" % name)
+    self.instances[name].start()
 
-    @command("console [name]")
-    @command("[name] console")
-    def do_console(self, name=None):
-        print("attaching", name)
-        if name and not self.instances[name].is_running():
-                sys.exit("Instance is not started")
-        self.instances[name].tmux.attach(name=name)
+  @command("console [name]")
+  @command("[name] console")
+  def do_console(self, name=None):
+    print("attaching", name)
+    if name and not self.instances[name].is_running():
+      sys.exit("Instance is not started")
+    self.instances[name].tmux.attach(name=name)
 
-    @command("status")
-    def do_status(self):
-        for instance in self.instances.values():
-            instance.print_status()
+  @command("status")
+  def do_status(self):
+    for instance in self.instances.values():
+      instance.print_status()
 
-    @command("shutdown all")
-    def do_shutdown(self, name=None):
-      for instance in self.instances.values():
-        if instance.is_running():
-          instance.shutdown()
+  @command("shutdown all")
+  def do_shutdown_all(self, name=None):
+    for instance in self.instances.values():
+      if instance.is_running():
+        instance.shutdown()
 
-    @command("[name] shutdown")
-    @command("shutdown [name]")
-    def do_shutdown(self, name=None):
-        self.instances[name].shutdown()
+  @command("[name] shutdown")
+  @command("shutdown [name]")
+  def do_shutdown(self, name=None):
+    self.instances[name].shutdown()
 
-    @command("kill all")
-    def do_kill_all(self):
-        for instance in self.instances.values():
-            instance.kill()
+  @command("kill all")
+  def do_kill_all(self):
+    for instance in self.instances.values():
+      instance.kill()  # no need to check if vm is running
 
-    @command("[name] kill")
-    @command("kill [name]")
-    def do_kill(self, name=None):
-        self.instances[name].kill()
+  @command("[name] kill")
+  @command("kill [name]")
+  def do_kill(self, name=None):
+    self.instances[name].kill()
 
-    @command("[name] reboot")
-    @command("reboot [name]")
-    def do_reboot(self, name=None):
-        self.instances[name].reboot()
+  @command("[name] reboot")
+  @command("reboot [name]")
+  def do_reboot(self, name=None):
+    self.instances[name].reboot()
 
-    @command("[name] reset")
-    @command("reset [name]")
-    def do_reset(self, name=None):
-        self.instances[name].reset()
+  @command("[name] reset")
+  @command("reset [name]")
+  def do_reset(self, name=None):
+    self.instances[name].reset()
 
-
-def main():
-  parser = argparse.ArgumentParser(
-    description='KVM commander version %s' % __version__)
-  parser.add_argument('-d', '--debug', action='store_true',
-                      default=False, help="enable debug output")
-  parser.add_argument('-v', '-V', '--version', action='store_true',
-                      default=False, help="get software version")
-  parser.add_argument('cmd', default=["status"], nargs="*",
-    help="command to execute")
-  args = parser.parse_args()
-  print("arguments:", args, file=sys.stderr)
-
-  if args.version:
-    return print("Software version:", __version__)
-
-  if args.debug:
-    log.verbosity = "debug"
-
-  cmd = CMD(kvms)
-  cmd.run_cmd(" ".join(args.cmd))
   @command("wait all timeout [timeout]")
   def do_wait_all(self, timeout):
     timeout = int(timeout)
@@ -296,3 +276,25 @@ def main():
       self.log.critical("kvms still running: %s" \
         % list(filter(lambda x: x.is_running(), self.instances.values())))
       self.do_kill_all()
+
+
+def main():
+  parser = argparse.ArgumentParser(
+    description='KVM commander version %s' % __version__)
+  parser.add_argument('-d', '--debug', action='store_true',
+                      default=False, help="enable debug output")
+  parser.add_argument('-v', '-V', '--version', action='store_true',
+                      default=False, help="get software version")
+  parser.add_argument('cmd', default=["status"], nargs="*",
+    help="command to execute")
+  args = parser.parse_args()
+  print("arguments:", args, file=sys.stderr)
+
+  if args.version:
+    return print("Software version:", __version__)
+
+  if args.debug:
+    log.verbosity = "debug"
+
+  cmd = CMD(kvms)
+  cmd.run_cmd(" ".join(args.cmd))
