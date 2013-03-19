@@ -157,7 +157,7 @@ class Bridged:
     self.br    = br
 
   def __str__(self):
-    cmd = "-net nic,model={model},macaddr={mac} -net bridge,br={br}" \
+    cmd = " -net nic,model={model},macaddr={mac} -net bridge,br={br}" \
            .format(model=self.model, br=self.br, mac=self.mac)
     return cmd
 
