@@ -6,8 +6,7 @@ Type=oneshot
 ExecStart=/usr/local/bin/kvmc start all
 
 ExecStop=/usr/local/bin/kvmc shutdown all
-ExecStop=/usr/local/bin/kvmc wait all timeout=3
-ExecStop=/usr/local/bin/kvmc kill all
+ExecStop=/usr/local/bin/kvmc graceful stop timeout 60
 
 [Install]
 WantedBy=network.target
