@@ -2,6 +2,7 @@
 from functools import reduce
 from useful.tmux import TMUX
 from useful.log import Log
+import signal
 import errno
 import os
 
@@ -67,7 +68,7 @@ class KVM:
       return False
 
     self.log.debug("spawning %s" % self)
-    self.tmux.run(self.cmd, name=self.name)
+    self.tmux.run(self, name=self.name)
 
   #TODO: check its uniqueness
   def gen_mac(self):
