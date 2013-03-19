@@ -75,17 +75,14 @@ class KVM(CLI):
         try:
           os.kill(pid, 0)
           return pid
-        except OSError as err:
-          if err.errno == errno.ESRCH:
-            os.unlink(self.pidfile)
-            return False
-          raise
+        except ProcessLookupError:
+          os.unlink(self.pidfile)
+          return False
 
     def start(self):
       if self.is_running():
-        print("Instance is allready started!")
+        print("Instance is already started!")
         return False
-      #print(self.cmd) ; return #TODO
 
       print("spawning", self.cmd)
       self.tmux.run(self.cmd, name=self.name)
@@ -111,20 +108,15 @@ class KVM(CLI):
       if not cmd.endswith(b'\n'):
         cmd += b'\n'
 
-      answer = b""
-      try:
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.settimeout(1)
-        log.debug("connecting to %s" % self.monfile)
-        s.connect(self.monfile)
-        s.send(cmd)
-        answer = s.recv(BUF_SIZE)
-        if len(answer) == BUF_SIZE:
-          log.error("too long answer, truncating")
-        log.notice(answer.decode(errors='replace'))
-      except:
-        raise
-
+      s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+      s.settimeout(1)
+      log.debug("connecting to %s" % self.monfile)
+      s.connect(self.monfile)
+      s.send(cmd)
+      answer = s.recv(BUF_SIZE)
+      if len(answer) == BUF_SIZE:
+        log.error("too long answer was truncated :(")
+      log.notice(answer.decode(errors='replace'))
       return answer
 
     def reboot(self):
@@ -147,7 +139,6 @@ class KVM(CLI):
 
     def __repr__(self):
       return "<KVM(name=\"{name}\")>".format(name=self.name)
-
 
 
 class CMD(CLI):
@@ -241,7 +232,7 @@ if __name__ == '__main__':
   parser.add_argument('-c', '--config', help="path to config file")
   parser.add_argument('cmd', default="status", nargs="*",
     help="command to execute")
-  args =  parser.parse_args()
+  args = parser.parse_args()
   print(args)
 
   if args.debug:
