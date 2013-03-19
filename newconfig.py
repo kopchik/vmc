@@ -245,23 +245,6 @@ class CMD(CLI):
         instances[name].reset()
 
 
-class Default(KVM):
-  mem   = 384
-  cpu   = "phenom"
-  cores = 1
-  net   = None
-  auto  = True
-  drives= []
-  cmd   = "qemu-system-x86_64 --enable-kvm -curses"
-  template = True
-
-
-class LOR(Default):
-  mem = 2048
-  net = [Bridged(nic="lor", model='virtio', mac="52:54:16:12:34:66", br="intbr")]
-  drives = [Drive("/home/exe/lor.qcow2", cache="unsafe")]
-
-
 def main():
   parser = argparse.ArgumentParser(
     description='KVM commander version %s' % __version__)
@@ -286,6 +269,3 @@ def main():
 
   cmd = CMD(kvms)
   cmd.run_cmd(args.cmd)
-
-if __name__ == '__main__':
-  main()
