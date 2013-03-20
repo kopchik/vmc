@@ -150,9 +150,10 @@ class KVM(metaclass=MetaKVM):
       if pid:
         formated += "  UP (pid %s)\n" % pid if pid else "DOWN"
       else:
-        formated += "  DOWN"
+        formated += "  DOWN\n"
     except StatusUnknown as err:
-      formated += "  UNKNOWN (%s)" % err
+      formated += "  UNKNOWN (%s)\n" % err
+    if not self.auto: formated += "  noauto\n"
     return formated
 
   def __repr__(self):
