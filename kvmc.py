@@ -163,20 +163,20 @@ class KVM(metaclass=MetaKVM):
 
 class Bridged:
   # TODO: make input validation
-  def __init__(self, model, mac, br, ifname=None):
+  def __init__(self, ifname, model, mac, br):
     self.model = model
     self.mac   = mac
     self.br    = br
     self.ifname= ifname
 
   def __str__(self):
-    cmd  = " -net nic,model={model},macaddr={mac}" \
-            .format(model=self.model, mac=self.mac)
+    cmd  = " -device {model},mac={mac},netdev={id}" \
+            .format(model=self.model, mac=self.mac, id=self.ifname)
     if self.ifname:
       warnings.warn("ifname does not supported yet")
       #cmd += ",ifname=%s" % self.ifname
-    cmd += " -net bridge,br={br}" \
-            .format(br=self.br)
+    cmd += " -netdev bridge,br={br},id={id}" \
+            .format(br=self.br, id=self.ifname)
     return cmd
 
 
