@@ -8,7 +8,7 @@ class Default(KVM):
   cores = 1
   drives= []
   cmd   = "qemu-system-x86_64 --enable-kvm -curses"
-  auto  = True
+  auto  = False
   template = True
 
 
