@@ -161,9 +161,10 @@ class KVM(metaclass=MetaKVM):
 
 
 class Bridged:
+  # TODO: make input validation
   def __init__(self, model, mac, br, ifname=None):
     self.model = model
-    self.mac   = mac  # TODO: validate MAC
+    self.mac   = mac
     self.br    = br
     self.ifname= ifname
 
@@ -207,7 +208,8 @@ class CMD(CLI):
     for instance in self.instances.values():
       time.sleep(sleep)
       if not instance.auto:
-        self.log.debug("%s is skipped because it has auto=False")
+        self.log.debug("%s is skipped because it has auto=False"
+                        % instance)
         continue
       if instance.is_running():
         log.debug("skipping %s because it is already started" % instance)
