@@ -143,14 +143,18 @@ class KVM(metaclass=MetaKVM):
   def reset(self):
     self.send_cmd("system_reset")
 
-  def print_status(self):
-    print("{name}".format(name=self.name))
+  def format_status(self):
+    formated = "%s\n" % self.name
     try:
       pid = self.is_running()
-      status = "UP (pid %s)" % pid if pid else "DOWN"
+      if pid:
+        formated += "  UP (pid %s)\n" % pid if pid else "DOWN"
+      else:
+        formated += "  DOWN\n"
     except StatusUnknown as err:
-      status = "UNKNOWN (%s)" % err
-    print ("  status:", status)
+      formated += "  UNKNOWN (%s)\n" % err
+    if not self.auto: formated += "  noauto\n"
+    return formated
 
   def __repr__(self):
     return "KVM(\"{name}\")".format(name=self.name)
@@ -231,7 +235,7 @@ class CMD(CLI):
   @command("status")
   def do_status(self):
     for instance in self.instances.values():
-      instance.print_status()
+      print(instance.format_status())
 
   @command("shutdown all")
   def do_shutdown_all(self, name=None):
