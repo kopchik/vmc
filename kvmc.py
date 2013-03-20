@@ -145,15 +145,15 @@ class KVM(metaclass=MetaKVM):
 
   def format_status(self):
     formated = "%s\n" % self.name
+    formated += "  noauto" if not self.auto else " "
     try:
       pid = self.is_running()
       if pid:
-        formated += "  UP (pid %s)\n" % pid if pid else "DOWN"
+        formated += " UP (pid %s)\n" % pid if pid else "DOWN"
       else:
-        formated += "  DOWN\n"
+        formated += " DOWN\n"
     except StatusUnknown as err:
-      formated += "  UNKNOWN (%s)\n" % err
-    if not self.auto: formated += "  noauto\n"
+      formated += " UNKNOWN (%s)\n" % err
     return formated
 
   def __repr__(self):
