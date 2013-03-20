@@ -32,9 +32,12 @@ kvms = OrderedDict()
 class MetaKVM(type):
   def __init__(cls, name, bases, ns):
     global kvms
+    if not cls.name:
+      #if there is no defined name we took it from class name
+      cls.name = name
     if not ns.get('template', False):
-      assert name not in kvms, "duplicate name: %s" % name
-      kvms[name] = cls()
+      assert cls.name not in kvms, "duplicate name: %s" % name
+      kvms[cls.name] = cls()
 
 
 class KVM(metaclass=MetaKVM):
@@ -49,7 +52,7 @@ class KVM(metaclass=MetaKVM):
   net = None
 
   def __init__(self):
-    self.name = self.name or self.__class__.__name__
+    # self.name = self.name or self.__class__.__name__  # this assignment is in MetaKVM 
     self.pidfile = "/var/tmp/kvm_%s.pid" % self.name
     self.monfile = "/var/tmp/kvm_%s.mon" % self.name
     self.log = Log("KVM %s" % self.name)
