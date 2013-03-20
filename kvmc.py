@@ -32,7 +32,7 @@ kvms = OrderedDict()
 class MetaKVM(type):
   def __init__(cls, name, bases, ns):
     global kvms
-    if not cls.name:
+    if 'name' not in ns:
       #if there is no defined name we took it from class name
       cls.name = name
     if not ns.get('template', False):
