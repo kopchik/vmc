@@ -41,15 +41,16 @@ class MetaKVM(type):
 
 
 class KVM(metaclass=MetaKVM):
-  name = None
-  mem  = 256
+  name  = None
+  mem   = 256
   cores = 1
-  cpu = "qemu64"
+  cpu   = "qemu64"
   runas = None
-  tmux = TMUX(socket="virt", session="KVM")
+  cmd   = "qemu-system-x86_64 --enable-kvm -curses"
+  tmux  = TMUX(socket="virt", session="KVM")
   template = True
-  auto = True  # TODO: not implemented
-  net = None
+  auto  = True  # TODO: not implemented
+  net   = None
 
   def __init__(self):
     # self.name = self.name or self.__class__.__name__  # this assignment is in MetaKVM 
