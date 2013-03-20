@@ -151,15 +151,18 @@ class KVM(metaclass=MetaKVM):
 
 
 class Bridged:
-  def __init__(self, nic, model, mac, br):
-    self.nic   = nic
+  def __init__(self, model, mac, br, ifname=None):
     self.model = model
     self.mac   = mac  # TODO: validate MAC
     self.br    = br
+    self.ifname= ifname
 
   def __str__(self):
-    cmd = " -net nic,model={model},macaddr={mac} -net bridge,br={br}" \
-           .format(model=self.model, br=self.br, mac=self.mac)
+    cmd  = " -net nic,model={model},macaddr={mac}" \
+            .format(model=self.model, mac=self.mac)
+    if self.ifname: cmd += ",ifname=%s" % self.ifname
+    cmd += " -net bridge,br={br}" \
+            .format(br=self.br)
     return cmd
 
 
