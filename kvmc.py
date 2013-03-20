@@ -199,7 +199,7 @@ class CMD(CLI):
   @command("autostart")
   def do_start_all(self):
     sleep = 0
-    log.debug("starting all stopped instances")
+    log.debug("starting all stopped instances with auto=True")
     for instance in self.instances.values():
       time.sleep(sleep)
       if not instance.auto:
@@ -245,6 +245,7 @@ class CMD(CLI):
 
   @command("kill all")
   def do_kill_all(self):
+    self.log.critical("KILLING ALL instances (even with auto=False)")
     for instance in self.instances.values():
       instance.kill()  # no need to check if vm is running
 
@@ -282,6 +283,7 @@ class CMD(CLI):
 
   @command("graceful stop timeout [timeout]")
   def do_graceful(self, timeout):
+    self.log.info("stopping ALL instances (even with auto=False)")
     timeout = int(timeout)
     self.do_shutdown_all()
     try:
