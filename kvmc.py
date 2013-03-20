@@ -45,6 +45,8 @@ class KVM(metaclass=MetaKVM):
   runas = None
   tmux = TMUX(socket="virt", session="KVM")
   template = True
+  auto = True  # TODO: not implemented
+  net = None
 
   def __init__(self):
     self.name = self.name or self.__class__.__name__
@@ -56,12 +58,12 @@ class KVM(metaclass=MetaKVM):
     cmd = self.cmd
     cmd += " -name %s" % self.name
     cmd += " -m %s" % self.mem
-    cmd += " -cpu %s" % self.cpu
+    if self.cpu: cmd += " -cpu %s" % self.cpu
     cmd += " -smp %s" % self.cores
     cmd += " -monitor unix:%s,server,nowait " % self.monfile
     cmd += " -pidfile %s " % self.pidfile
-    cmd += stringify(self.net)
-    cmd += stringify(self.drives)
+    if self.net: cmd += stringify(self.net)
+    if self.drives: cmd += stringify(self.drives)
     if self.runas:
       if os.geteuid() != 0:
         cmd = "sudo " + cmd
