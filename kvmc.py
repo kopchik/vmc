@@ -202,6 +202,8 @@ class CMD(CLI):
     log.debug("starting all stopped instances")
     for instance in self.instances.values():
       time.sleep(sleep)
+      if not instance.auto:
+        continue
       if instance.is_running():
         log.debug("skipping %s because it is already started" % instance)
         continue
