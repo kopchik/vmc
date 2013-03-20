@@ -7,6 +7,7 @@ from useful.log import Log
 from collections import OrderedDict
 from functools import reduce
 import argparse
+import warnings
 import socket
 import signal
 import errno
@@ -165,7 +166,9 @@ class Bridged:
   def __str__(self):
     cmd  = " -net nic,model={model},macaddr={mac}" \
             .format(model=self.model, mac=self.mac)
-    if self.ifname: cmd += ",ifname=%s" % self.ifname
+    if self.ifname:
+      warnings.warn("ifname does not supported yet")
+      #cmd += ",ifname=%s" % self.ifname
     cmd += " -net bridge,br={br}" \
             .format(br=self.br)
     return cmd
