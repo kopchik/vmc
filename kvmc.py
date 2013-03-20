@@ -203,6 +203,7 @@ class CMD(CLI):
     for instance in self.instances.values():
       time.sleep(sleep)
       if not instance.auto:
+        self.log.debug("%s is skipped because it has auto=False")
         continue
       if instance.is_running():
         log.debug("skipping %s because it is already started" % instance)
