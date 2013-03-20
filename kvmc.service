@@ -3,7 +3,7 @@ Description=Map Caps to Escape in Console
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/kvmc start all
+ExecStart=/usr/local/bin/kvmc autostart
 
 ExecStop=/usr/local/bin/kvmc shutdown all
 ExecStop=/usr/local/bin/kvmc graceful stop timeout 60

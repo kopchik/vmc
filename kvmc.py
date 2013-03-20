@@ -196,7 +196,7 @@ class CMD(CLI):
       for kvm in self.instances:
           print(kvm)
 
-  @command("start all")
+  @command("autostart")
   def do_start_all(self):
     sleep = 0
     log.debug("starting all stopped instances")
