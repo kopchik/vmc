@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# TODO: log to syslog
 from useful.cli  import CLI, command
 from useful.tmux import TMUX
 from useful.log import Log
