@@ -7,6 +7,7 @@ from collections import OrderedDict
 from functools import reduce
 import argparse
 import warnings
+import random
 import socket
 import signal
 import errno
@@ -102,7 +103,7 @@ class KVM(metaclass=MetaKVM):
   #TODO: check its uniqueness
   def gen_mac(self):
     #from http://mediakey.dk/~cc/generate-random-mac-address-for-e-g-xen-guests/
-    mac = [ 0x52, 0x54, 0x00,
+    mac = [ 0x02, 0x00, 0x00,
     random.randint(0x00, 0xff),
     random.randint(0x00, 0xff),
     random.randint(0x00, 0xff) ]
@@ -195,6 +196,11 @@ class CMD(CLI):
   def __init__(self, instances):
       self.instances = instances
       self.log = Log("CMD")
+
+  @command("gen mac")
+  def do_genmac(self):
+    print(self.instances)
+    print(list(self.instances.values())[0].gen_mac())
 
   @command("list")
   def do_list(self):
