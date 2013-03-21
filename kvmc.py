@@ -167,6 +167,7 @@ class Bridged:
     self.model = model
     self.mac   = mac
     self.br    = br
+    assert len(ifname) < 16, "too long ifname"  # linux/if.h#IFNAMSIZ
     self.ifname= ifname
 
   def __str__(self):
