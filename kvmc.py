@@ -16,6 +16,8 @@ import sys
 import os
 
 __version__ = 7
+KILL_TIMEOUT = 10
+POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
 log = Log("KVMC")
 
@@ -114,8 +116,17 @@ class KVM(metaclass=MetaKVM):
   def kill(self):
     pid = self.is_running()
     if not pid:
-      return
-    os.kill(pid, signal.SIGTERM)
+      return self.log.debug("He's Dead, Jim!")
+    self.send_qmp("{'execute': 'quit'}")
+    timeout = KILL_TIMEOUT
+    while timeout > 0:
+      time.sleep(POLL_INTERVAL)
+      timeout -= POLL_INTERVAL
+      if not self.is_running():
+        break
+    else:
+      self.log.critical("It doesn't want to die, killling by SIGKILL")
+      os.kill(pid, signal.SIGKILL)
 
   def send_qmp(self, cmd):
     if isinstance(cmd, str):
