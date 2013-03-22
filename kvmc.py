@@ -65,7 +65,7 @@ class KVM(metaclass=MetaKVM):
     cmd += " -m %s" % self.mem
     if self.cpu: cmd += " -cpu %s" % self.cpu
     cmd += " -smp %s" % self.cores
-    cmd += " -monitor unix:%s,server,nowait " % self.monfile
+    cmd += " -qmp unix:%s,server,nowait " % self.monfile
     cmd += " -pidfile %s " % self.pidfile
     if self.net: cmd += stringify(self.net)
     if self.drives: cmd += stringify(self.drives)
@@ -115,16 +115,16 @@ class KVM(metaclass=MetaKVM):
       return
     os.kill(pid, signal.SIGTERM)
 
-  def send_cmd(self, cmd):
+  def send_qmp(self, cmd):
     if isinstance(cmd, str):
       cmd = cmd.encode()
-    if not cmd.endswith(b'\n'):
-      cmd += b'\n'
-
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.settimeout(1)
     self.log.debug("connecting to %s" % self.monfile)
     s.connect(self.monfile)
+    s.send(b'{"execute": "qmp_capabilities"}')  # handshake
+    answer = s.recv(BUF_SIZE)
+    self.log.debug(answer.decode(errors='replace'))
     s.send(cmd)
     answer = s.recv(BUF_SIZE)
     if len(answer) == BUF_SIZE:
@@ -136,13 +136,20 @@ class KVM(metaclass=MetaKVM):
     self.tmux.attach(name=self.name)
 
   def reboot(self):
-    self.send_cmd("sendkey ctrl-alt-delete")
+    data = """{ "execute": "send-key",
+        "arguments": { 'keys': [
+          {'type':'qcode', 'data': 'ctrl'},
+          {'type':'qcode', 'data': 'alt'},
+          {'type':'qcode', 'data': 'delete'}
+          ]}}"""
+    self.send_qmp(data)
+
 
   def shutdown(self):
-    self.send_cmd("system_powerdown")
+    self.send_qmp('{"execute": "system_powerdown"}')
 
   def reset(self):
-    self.send_cmd("system_reset")
+    self.send_qmp('{"execute": "system_reset"}')
 
   def format_status(self):
     formated = "%s\n" % self.name
