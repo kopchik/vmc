@@ -16,7 +16,6 @@ import sys
 import os
 
 __version__ = 7
-CONFIGS = list(map(os.path.expanduser, ['~/kvmc.cfg', '/etc/kvmc.cfg']))
 BUF_SIZE = 65535
 log = Log("KVMC")
 
@@ -76,6 +75,9 @@ class KVM(metaclass=MetaKVM):
     return cmd
 
   def is_running(self):
+    """ Returns either pid of the process 
+        or False if kvm is not running.
+    """
       try:
         pid = int(open(self.pidfile).readline().strip())
       except IOError as err:
@@ -94,7 +96,7 @@ class KVM(metaclass=MetaKVM):
 
   def start(self):
     if self.is_running():
-      self.log.error("Instance is already started!")
+      self.log.debug("Instance is already started!")
       return False
 
     self.log.debug("spawning %s" % self.get_cmd())
@@ -129,7 +131,7 @@ class KVM(metaclass=MetaKVM):
     answer = s.recv(BUF_SIZE)
     if len(answer) == BUF_SIZE:
       self.log.error("too long answer was truncated :(")
-    self.log.notice(answer.decode(errors='replace'))
+    self.log.debug(answer.decode(errors='replace'))
     return answer
 
   def console(self):
