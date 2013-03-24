@@ -261,6 +261,10 @@ class CMD(CLI):
       sys.exit("Instance is not started")
     self.instances[name].tmux.attach(name=name)
 
+  @command("show cmd [name]")
+  def show_cmd(self, name):
+    print(self.instances[name].get_cmd())
+
   @command("status")
   def do_status(self):
     for instance in self.instances.values():
