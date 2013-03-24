@@ -194,7 +194,7 @@ class Bridged:
     cmd  = " -device {model},mac={mac},netdev={id}" \
             .format(model=self.model, mac=self.mac, id=self.ifname)
     if self.ifname:
-      warnings.warn("ifname does not supported yet")
+      warnings.warn("ifname is likely to be supported only in qemu 1.5")
       #cmd += ",ifname=%s" % self.ifname
     cmd += " -netdev bridge,br={br},id={id}" \
             .format(br=self.br, id=self.ifname)
@@ -342,7 +342,7 @@ def main():
   parser.add_argument('cmd', default=["status"], nargs="*",
     help="command to execute")
   args = parser.parse_args()
-  print("arguments:", args, file=sys.stderr)
+  log.debug("arguments: %s" % args)
 
   if args.version:
     return print("Software version:", __version__)
