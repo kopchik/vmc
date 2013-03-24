@@ -80,21 +80,21 @@ class KVM(metaclass=MetaKVM):
     """ Returns either pid of the process 
         or False if kvm is not running.
     """
-      try:
-        pid = int(open(self.pidfile).readline().strip())
-      except IOError as err:
-        if err.errno == errno.EACCES:
-          raise StatusUnknown("cannot read pidfile:", err)
-        elif err.errno == errno.ENOENT:
-          return False
-        raise
-
-      try:
-        os.kill(pid, 0)
-        return pid
-      except ProcessLookupError:
-        os.unlink(self.pidfile)
+    try:
+      pid = int(open(self.pidfile).readline().strip())
+    except IOError as err:
+      if err.errno == errno.EACCES:
+        raise StatusUnknown("cannot read pidfile:", err)
+      elif err.errno == errno.ENOENT:
         return False
+      raise
+
+    try:
+      os.kill(pid, 0)
+      return pid
+    except ProcessLookupError:
+      os.unlink(self.pidfile)
+      return False
 
   def start(self):
     if self.is_running():
