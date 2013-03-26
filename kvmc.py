@@ -91,7 +91,14 @@ class Manager(CLI):
   def start(self, name=None):
     self.log.debug("Starting %s" % name)
     self.check_instance(name)
-    self.instances[name].start()
+    inst = self.instances[name]
+    inst.start()
+    for x in range(100):
+        pid = inst.is_running()
+        if pid: return pid
+        time.sleep(0.1)
+        print("waiting for console")
+    raise StatusUnknown("can't launch KVM")
 
   @command("stop all")
   @command("shutdown all")
