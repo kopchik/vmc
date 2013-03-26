@@ -29,17 +29,162 @@ def stringify(iterable):
     r += str(it)
   return r+" "
 
+def gen_mac():
+  #TODO: check its uniqueness
+  #from http://mediakey.dk/~cc/generate-random-mac-address-for-e-g-xen-guests/
+  mac = [ 0x02, 0x00, 0x00,
+  random.randint(0x00, 0xff),
+  random.randint(0x00, 0xff),
+  random.randint(0x00, 0xff) ]
+  return ':'.join(map(lambda x: "%02x" % x, mac))
 
-kvms = OrderedDict()
+
+class UnknownInstance(Exception):
+  """no such machine"""
+
+
+class Manager(CLI):
+  """ class to orchestrate several instances at once """
+  def __init__(self, name="default"):
+    self.instances = OrderedDict()
+    self.name = name
+    self.log  = Log(name)
+
+  def add_instance(self, inst):
+    self.instances[inst.name] = inst
+
+  def check_instance(self, name):
+    if name not in self.instances:
+      raise UnknownInstance("no such instance: %s" % name)
+
+  @command("gen mac")
+  def genmac(self):
+    print(gen_mac())
+
+  @command("list")
+  def do_list(self):
+    return self.instances.keys()
+
+  @command("autostart")
+  def autostart(self):
+    log.debug("starting all stopped instances with auto=True")
+    sleep = 0  # do not do a pause if there is only one instance
+    for instance in self.instances.values():
+      time.sleep(sleep)
+      if not instance.auto:
+        self.log.debug("%s is skipped because it has auto=False"
+                        % instance)
+        continue
+      if instance.is_running():
+        log.debug("skipping %s because it is already started" % instance)
+        continue
+      log.info("Starting %s" % instance)
+      instance.start()
+      sleep = 3
+
+  @command("[name] start")
+  @command("start [name]")
+  def start(self, name=None):
+    self.log.debug("Starting %s" % name)
+    self.check_instance(name)
+    self.instances[name].start()
+
+  @command("stop all")
+  @command("shutdown all")
+  def stop_all(self):
+    for inst in self.instances.values():
+      inst.stop()
+
+  @command("stop [name]")
+  @command("[name] stop")
+  @command("shutdown [name]")
+  @command("[name] shutdown")
+  def stop(self, name):
+    self.check_instance(name)
+    self.instances[name].stop()
+
+  @command("[name] reboot")
+  @command("reboot [name]")
+  def reboot(self, name=None):
+    self.check_instance(name)
+    self.instances[name].reboot()
+
+  @command("[name] reset")
+  @command("reset [name]")
+  def reset(self, name=None):
+    self.check_instance(name)
+    self.instances[name].reset()
+
+  @command("kill all")
+  def kill_all(self):
+    self.log.critical("KILLING ALL instances (even with auto=False)")
+    for inst in self.instances.values():
+      inst.kill()
+
+  @command("[name] kill")
+  @command("kill [name]")
+  def kill(self, name):
+    self.check_instance(name)
+    self.instance[name].kill()
+
+  @command("show cmd [name]")
+  def show_cmd(self, name):
+    print(self.instances[name].get_cmd())
+
+  @command("console [name]")
+  @command("[name] console")
+  def console(self, name=None):
+    self.log.debug("attaching to %s" % name)
+    if name and not self.instances[name].is_running():
+      sys.exit("Instance is not started")
+    self.instances[name].tmux.attach(name=name)
+
+  @command("status")
+  def status(self):
+    for inst in self.instances.values():
+      print(inst.format_status())
+
+  @command("wait all timeout [timeout]")
+  def wait_all(self, timeout):
+    timeout = int(timeout)
+    t = 0
+    while True:
+      running = 0
+      for inst in self.instances.values():
+        if inst.is_running():
+          running = 1
+      if not running:
+        break
+      time.sleep(1)
+      t += 1
+      if t > timeout:
+        raise TimeoutError("instances still running")
+      print('.', end='', file=sys.stderr)
+
+  @command("graceful stop timeout [timeout]")
+  def do_graceful(self, timeout):
+    self.log.info("stopping ALL instances (even with auto=False)")
+    timeout = int(timeout)
+    self.stop_all()
+    try:
+      self.wait_all(timeout)
+    except TimeoutError:
+      self.log.critical("kvms still running: %s" \
+        % list(filter(lambda x: x.is_running(), self.instances.values())))
+      self.do_kill_all()
+manager = Manager("")  # default manager
+
+
 class MetaKVM(type):
+  """ Check the instance name and add it to its manager """
   def __init__(cls, name, bases, ns):
-    global kvms
+    #if there is no defined name we took it from class name
     if 'name' not in ns:
-      #if there is no defined name we took it from class name
       cls.name = name
+      mgr = cls.mgr
     if not ns.get('template', False):
-      assert cls.name not in kvms, "duplicate name: %s" % name
-      kvms[cls.name] = cls()
+      assert cls.name not in mgr.instances, "duplicate name: %s" % name
+      mgr.add_instance(cls())
 
 
 class KVM(metaclass=MetaKVM):
@@ -51,8 +196,9 @@ class KVM(metaclass=MetaKVM):
   cmd   = "qemu-system-x86_64 --enable-kvm -curses"
   tmux  = TMUX(socket="virt", session="KVM")
   template = True
-  auto  = True  # TODO: not implemented
+  auto  = True
   net   = None
+  mgr   = manager  # assigned manager, this managed by metaclass
 
   def __init__(self):
     # self.name = self.name or self.__class__.__name__  # this assignment is in MetaKVM 
@@ -60,7 +206,9 @@ class KVM(metaclass=MetaKVM):
     self.monfile = "/var/tmp/kvm_%s.mon" % self.name
     self.log = Log("KVM %s" % self.name)
 
+
   def get_cmd(self):
+    """ Get cmd that launches instance """
     cmd = self.cmd
     cmd += " -name %s" % self.name
     cmd += " -m %s" % self.mem
@@ -104,16 +252,8 @@ class KVM(metaclass=MetaKVM):
     self.log.debug("spawning %s" % self.get_cmd())
     self.tmux.run(self.get_cmd(), name=self.name)
 
-  #TODO: check its uniqueness
-  def gen_mac(self):
-    #from http://mediakey.dk/~cc/generate-random-mac-address-for-e-g-xen-guests/
-    mac = [ 0x02, 0x00, 0x00,
-    random.randint(0x00, 0xff),
-    random.randint(0x00, 0xff),
-    random.randint(0x00, 0xff) ]
-    return ':'.join(map(lambda x: "%02x" % x, mac))
-
   def kill(self):
+    """ Kill guest using all possible means """
     pid = self.is_running()
     if not pid:
       return self.log.debug("He's Dead, Jim!")
@@ -149,6 +289,7 @@ class KVM(metaclass=MetaKVM):
     self.tmux.attach(name=self.name)
 
   def reboot(self):
+    """ Send Ctrl+Alt+Del """
     data = """{ "execute": "send-key",
         "arguments": { 'keys': [
           {'type':'qcode', 'data': 'ctrl'},
@@ -157,11 +298,13 @@ class KVM(metaclass=MetaKVM):
           ]}}"""
     self.send_qmp(data)
 
-
   def shutdown(self):
-    self.send_qmp('{"execute": "system_powerdown"}')
+    if self.is_running():
+      self.send_qmp('{"execute": "system_powerdown"}')
+  stop = shutdown  # stop is alias for shutdown
 
   def reset(self):
+    """ Do hard reset """
     self.send_qmp('{"execute": "system_reset"}')
 
   def format_status(self):
@@ -213,125 +356,6 @@ class Drive:
     return cmd
 
 
-class CMD(CLI):
-  def __init__(self, instances):
-      self.instances = instances
-      self.log = Log("CMD")
-
-  @command("gen mac")
-  def do_genmac(self):
-    print(self.instances)
-    print(list(self.instances.values())[0].gen_mac())
-
-  @command("list")
-  def do_list(self):
-      for kvm in self.instances:
-          print(kvm)
-
-  @command("autostart")
-  def do_start_all(self):
-    sleep = 0
-    log.debug("starting all stopped instances with auto=True")
-    for instance in self.instances.values():
-      time.sleep(sleep)
-      if not instance.auto:
-        self.log.debug("%s is skipped because it has auto=False"
-                        % instance)
-        continue
-      if instance.is_running():
-        log.debug("skipping %s because it is already started" % instance)
-        continue
-      log.info("Starting %s" % instance)
-      instance.start()
-      sleep = 3
-
-  @command("[name] start")
-  @command("start [name]")
-  def do_start(self, name=None):
-    if name not in self.instances:
-      fatal_error("no such instance: %s" % name)
-    print("Starting %s" % name)
-    self.instances[name].start()
-
-  @command("console [name]")
-  @command("[name] console")
-  def do_console(self, name=None):
-    print("attaching", name)
-    if name and not self.instances[name].is_running():
-      sys.exit("Instance is not started")
-    self.instances[name].tmux.attach(name=name)
-
-  @command("show cmd [name]")
-  def show_cmd(self, name):
-    print(self.instances[name].get_cmd())
-
-  @command("status")
-  def do_status(self):
-    for instance in self.instances.values():
-      print(instance.format_status())
-
-  @command("shutdown all")
-  def do_shutdown_all(self, name=None):
-    for instance in self.instances.values():
-      if instance.is_running():
-        instance.shutdown()
-
-  @command("[name] shutdown")
-  @command("shutdown [name]")
-  def do_shutdown(self, name=None):
-    self.instances[name].shutdown()
-
-  @command("kill all")
-  def do_kill_all(self):
-    self.log.critical("KILLING ALL instances (even with auto=False)")
-    for instance in self.instances.values():
-      instance.kill()  # no need to check if vm is running
-
-  @command("[name] kill")
-  @command("kill [name]")
-  def do_kill(self, name=None):
-    self.instances[name].kill()
-
-  @command("[name] reboot")
-  @command("reboot [name]")
-  def do_reboot(self, name=None):
-    self.instances[name].reboot()
-
-  @command("[name] reset")
-  @command("reset [name]")
-  def do_reset(self, name=None):
-    self.instances[name].reset()
-
-  @command("wait all timeout [timeout]")
-  def do_wait_all(self, timeout):
-    timeout = int(timeout)
-    t = 0
-    while True:
-      running = 0
-      for inst in self.instances.values():
-        if inst.is_running():
-          running = 1
-      if not running:
-        break
-      time.sleep(1)
-      t += 1
-      if t > timeout:
-        raise TimeoutError("instances still running")
-      print('.', end='', file=sys.stderr)
-
-  @command("graceful stop timeout [timeout]")
-  def do_graceful(self, timeout):
-    self.log.info("stopping ALL instances (even with auto=False)")
-    timeout = int(timeout)
-    self.do_shutdown_all()
-    try:
-      self.do_wait_all(timeout)
-    except TimeoutError:
-      self.log.critical("kvms still running: %s" \
-        % list(filter(lambda x: x.is_running(), self.instances.values())))
-      self.do_kill_all()
-
-
 def main():
   parser = argparse.ArgumentParser(
     description='KVM commander version %s' % __version__)
@@ -350,5 +374,4 @@ def main():
   if args.debug:
     log.verbosity = "debug"
 
-  cmd = CMD(kvms)
-  cmd.run_cmd(" ".join(args.cmd))
+  manager.run_cmd(" ".join(args.cmd))
