@@ -125,7 +125,7 @@ class Manager(CLI):
   @command("kill [name]")
   def kill(self, name):
     self.check_instance(name)
-    self.instance[name].kill()
+    self.instances[name].kill()
 
   @command("show cmd [name]")
   def show_cmd(self, name):
