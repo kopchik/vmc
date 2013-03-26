@@ -181,7 +181,7 @@ class MetaKVM(type):
     #if there is no defined name we took it from class name
     if 'name' not in ns:
       cls.name = name
-      mgr = cls.mgr
+    mgr = cls.mgr
     if not ns.get('template', False):
       assert cls.name not in mgr.instances, "duplicate name: %s" % name
       mgr.add_instance(cls())
