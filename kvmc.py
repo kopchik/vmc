@@ -43,6 +43,10 @@ class UnknownInstance(Exception):
   """no such machine"""
 
 
+class StatusUnknown(Exception):
+  """cannot get status (permission problem, etc)"""
+
+
 class Manager(CLI):
   """ class to orchestrate several instances at once """
   def __init__(self, name="default"):
