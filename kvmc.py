@@ -98,7 +98,7 @@ class Manager(CLI):
         if pid: return pid
         time.sleep(0.1)
         print("waiting for console")
-    raise StatusUnknown("can't launch KVM")
+    raise StatusUnknown("cannot launch KVM")
 
   @command("stop all")
   @command("shutdown all")
