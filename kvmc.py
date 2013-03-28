@@ -363,7 +363,7 @@ class Drive:
     return cmd
 
 
-def main():
+def main(manager=manager):
   parser = argparse.ArgumentParser(
     description='KVM commander version %s' % __version__)
   parser.add_argument('-d', '--debug', action='store_true',
