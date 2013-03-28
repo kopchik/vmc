@@ -55,6 +55,8 @@ class Manager(CLI):
     self.log  = Log(name)
 
   def add_instance(self, inst):
+    assert inst.name not in self.instances, \
+      "we already have machine with the name %s" % inst.name
     self.instances[inst.name] = inst
 
   def check_instance(self, name):
@@ -185,19 +187,7 @@ class Manager(CLI):
 manager = Manager("")  # default manager
 
 
-class MetaKVM(type):
-  """ Check the instance name and add it to its manager """
-  def __init__(cls, name, bases, ns):
-    #if there is no defined name we took it from class name
-    if 'name' not in ns:
-      cls.name = name
-    mgr = cls.mgr
-    if not ns.get('template', False):
-      assert cls.name not in mgr.instances, "duplicate name: %s" % name
-      mgr.add_instance(cls())
-
-
-class KVM(metaclass=MetaKVM):
+class KVM:
   name  = None
   mem   = 256
   cores = 1
@@ -205,16 +195,21 @@ class KVM(metaclass=MetaKVM):
   runas = None
   cmd   = "qemu-system-x86_64 --enable-kvm -curses"
   tmux  = TMUX(socket="virt", session="KVM")
-  template = True
   auto  = True
   net   = None
+  drives= None
   mgr   = manager  # assigned manager, this managed by metaclass
 
-  def __init__(self):
+  def __init__(self, **kwargs):
+    self.__dict__.update(kwargs)
     # self.name = self.name or self.__class__.__name__  # this assignment is in MetaKVM 
     self.pidfile = "/var/tmp/kvm_%s.pid" % self.name
     self.monfile = "/var/tmp/kvm_%s.mon" % self.name
     self.log = Log("KVM %s" % self.name)
+    assert self.name, "name is mandatory"
+    if self.mgr:
+      self.log.debug("adding %s to %s" % (self, self.mgr))
+      self.mgr.add_instance(self)
 
 
   def get_cmd(self):
