@@ -12,8 +12,8 @@ class Default(KVM):
 
 lor = Default(
   name = "lor",
-  mem = 2048,
-  net = [Bridged(ifname="lor", model='virtio-net',
+  mem  = 2048,
+  net  = [Bridged(ifname="lor", model='virtio-net',
          mac="52:54:16:12:34:66", br="intbr")],
   drives = [Drive("/home/exe/lor.qcow2",
             iface="ide", cache="unsafe")])

@@ -378,7 +378,8 @@ def main(manager=manager):
   if args.version:
     return print("Software version:", __version__)
 
-  if args.debug:
-    log.verbosity = "debug"
+  # TODO: rewrite this
+  # if args.debug:
+  #   log.verbosity = "debug"
 
   manager.run_cmd(" ".join(args.cmd))
