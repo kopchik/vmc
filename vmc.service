@@ -1,0 +1,12 @@
+[Unit]
+Description=Map Caps to Escape in Console
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/vmc autostart
+
+ExecStop=/usr/local/bin/vmc shutdown all
+ExecStop=/usr/local/bin/vmc graceful stop timeout 60
+
+[Install]
+WantedBy=network.target

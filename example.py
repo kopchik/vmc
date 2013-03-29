@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from kvmc import KVM, Bridged, Drive, main
+from libvmc import KVM, Bridged, Drive, main
 
 class Default(KVM):
   mem   = 384
