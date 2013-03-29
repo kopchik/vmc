@@ -17,16 +17,15 @@ Example of usage:
 ~~~
 [root@newmaster virtuals]# cat /usr/local/bin/vmc
 #!/usr/bin/env python3
-
 from libvmc import KVM, Bridged, Drive, main
 
+# create a default VM template
 class Default(KVM):
-  mem   = 512
+  mem   = 512  # RAM size in megs
   cpu   = "phenom"
   cores = 1
-  net   = None
-  auto  = True
-  cmd   = "qemu-system-x86_64 --enable-kvm -curses"
+  auto  = True  # start VM on autostart command
+  cmd   = "qemu-system-x86_64 --enable-kvm -curses"  # CMD to run
 
 
 stuff = Default(
@@ -35,6 +34,7 @@ stuff = Default(
   drives = [Drive("/home/virtuals/stuff.raw")],
   net    = [Bridged(ifname="stuff_ext", model='e1000', mac="00:50:56:00:37:24", br="extbr"),
             Bridged(ifname="stuff_int", model='e1000', mac="52:54:19:12:34:59", br="intbr"),])
+
 
 kliga = Default(
   name   = "kliga",
@@ -64,7 +64,7 @@ b00
 b00
   UP (pid 31313)
 
-[root@newmaster virtuals]# vmc   # withour arguments it will print status of all machines
+[root@newmaster virtuals]# vmc   # without arguments it will print status of all machines
 stuff
   DOWN
 
@@ -72,6 +72,8 @@ b00
   UP (pid 31313)
 
 ~~~
+
+1. To see the console of VM: **vmc console <VMNAME>**
 
 1. ...
 
