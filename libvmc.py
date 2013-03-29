@@ -90,17 +90,13 @@ class Manager(CLI):
 
   @command("[name] start")
   @command("start [name]")
-  def start(self, name=None):
+  def start(self, name):
+    assert isinstance(name, str), "name should be string"
     self.log.debug("Starting %s" % name)
     self.check_instance(name)
     inst = self.instances[name]
-    inst.start()
-    for x in range(100):
-        pid = inst.is_running()
-        if pid: return pid
-        time.sleep(0.1)
-        print("waiting for console")
-    raise StatusUnknown("cannot launch KVM")
+    pid = inst.start()
+    return pid
 
   @command("stop all")
   @command("shutdown all")
@@ -202,7 +198,7 @@ class KVM:
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
-    # self.name = self.name or self.__class__.__name__  # this assignment is in MetaKVM 
+    # self.name = self.name or self.__class__.__name__  # this assignment is in MetaKVM
     self.pidfile = "/var/tmp/kvm_%s.pid" % self.name
     self.monfile = "/var/tmp/kvm_%s.mon" % self.name
     self.log = Log("KVM %s" % self.name)
@@ -230,7 +226,7 @@ class KVM:
     return cmd
 
   def is_running(self):
-    """ Returns either pid of the process 
+    """ Returns either pid of the process
         or False if kvm is not running.
     """
     try:
@@ -256,6 +252,14 @@ class KVM:
 
     self.log.debug("spawning %s" % self.get_cmd())
     self.tmux.run(self.get_cmd(), name=self.name)
+
+    for x in range(100):
+        pid = inst.is_running()
+        if pid: return pid
+        time.sleep(0.1)
+        print("waiting for VM")
+    raise StatusUnknown("cannot launch KVM")
+
 
   def kill(self):
     """ Kill guest using all possible means """
