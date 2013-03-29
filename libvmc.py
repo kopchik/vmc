@@ -258,7 +258,7 @@ class KVM:
         if pid: return pid
         time.sleep(0.1)
         print("waiting for VM")
-    raise StatusUnknown("cannot launch KVM")
+    raise StatusUnknown("KVM %s doesn't want to start" % name)
 
 
   def kill(self):
