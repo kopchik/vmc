@@ -254,7 +254,7 @@ class KVM:
     self.tmux.run(self.get_cmd(), name=self.name)
 
     for x in range(100):
-        pid = inst.is_running()
+        pid = self.is_running()
         if pid: return pid
         time.sleep(0.1)
         print("waiting for VM")
