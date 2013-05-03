@@ -288,12 +288,12 @@ class KVM:
     s.connect(self.monfile)
     s.send(b'{"execute": "qmp_capabilities"}')  # handshake
     answer = s.recv(BUF_SIZE)
-    self.log.debug(answer.decode(errors='replace'))
+    #self.log.debug(answer.decode(errors='replace'))
     s.send(cmd)
     answer = s.recv(BUF_SIZE)
     if len(answer) == BUF_SIZE:
       self.log.error("too long answer was truncated :(")
-    self.log.debug(answer.decode(errors='replace'))
+    #self.log.debug(answer.decode(errors='replace'))
     return answer
 
   def console(self):
