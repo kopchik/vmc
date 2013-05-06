@@ -170,7 +170,7 @@ class Manager(CLI):
       print('.', end='', file=sys.stderr)
 
   @command("graceful stop timeout [timeout]")
-  def graceful(self, timeout):
+  def graceful(self, timeout=30):
     self.log.info("stopping ALL instances (even with auto=False)")
     timeout = int(timeout)
     self.stop_all()
