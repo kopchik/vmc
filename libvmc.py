@@ -15,7 +15,7 @@ import time
 import sys
 import os
 
-__version__ = 7
+__version__ = 8
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -244,6 +244,10 @@ class KVM:
     except ProcessLookupError:
       os.unlink(self.pidfile)
       return False
+
+  @property
+  def pid(self):
+    return self.is_running()
 
   def start(self):
     if self.is_running():
