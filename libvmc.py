@@ -358,7 +358,7 @@ class Bridged:
     cmd += " -netdev bridge,br={br},id={id}" \
             .format(br=self.br, id=self.ifname)
     if self.helper:
-      cmd += "helper={helper}".format(helper=self.helper)
+      cmd += ",helper={helper}".format(helper=self.helper)
     return cmd
 
 
