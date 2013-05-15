@@ -15,7 +15,7 @@ import time
 import sys
 import os
 
-__version__ = 8
+__version__ = 9
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -341,10 +341,11 @@ class KVM:
 
 class Bridged:
   # TODO: make input validation
-  def __init__(self, ifname, model, mac, br):
+  def __init__(self, ifname, model, mac, br, helper=None):
     self.model = model
     self.mac   = mac
     self.br    = br
+    self.helper= helper
     assert len(ifname) < 16, "too long ifname"  # linux/if.h#IFNAMSIZ
     self.ifname= ifname
 
@@ -356,6 +357,8 @@ class Bridged:
       #cmd += ",ifname=%s" % self.ifname
     cmd += " -netdev bridge,br={br},id={id}" \
             .format(br=self.br, id=self.ifname)
+    if self.helper:
+      cmd += "helper={helper}".format(helper=self.helper)
     return cmd
 
 
