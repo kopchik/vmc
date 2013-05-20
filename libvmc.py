@@ -179,7 +179,7 @@ class Manager(CLI):
     except TimeoutError:
       self.log.critical("kvms still running: %s" \
         % list(filter(lambda x: x.is_running(), self.instances.values())))
-      self.do_kill_all()
+      self.kill_all()
 manager = Manager("")  # default manager
 
 
