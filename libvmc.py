@@ -15,7 +15,7 @@ import time
 import sys
 import os
 
-__version__ = 9
+__version__ = 10
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -96,7 +96,7 @@ class Manager(CLI):
     self.check_instance(name)
     inst = self.instances[name]
     pid = inst.start()
-    return pid
+    return inst
 
   @command("stop all")
   @command("shutdown all")
