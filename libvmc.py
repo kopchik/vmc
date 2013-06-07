@@ -29,7 +29,7 @@ def stringify(iterable):
     r += str(it)
   return r+" "
 
-def gen_mac():
+def gen_mac(check_unique=False):
   #TODO: check its uniqueness
   #from http://mediakey.dk/~cc/generate-random-mac-address-for-e-g-xen-guests/
   mac = [ 0x02, 0x00, 0x00,
@@ -167,7 +167,7 @@ class Manager(CLI):
       if timeout < 0:
         raise TimeoutError("instances still running")
       time.sleep(1)
-      print('.', end='', file=sys.stderr)
+      print('.', end='', file=sys.stderr, flush=True)
 
   @command("graceful stop timeout [timeout]")
   def graceful(self, timeout=30):
@@ -206,7 +206,6 @@ class KVM:
     if self.mgr:
       self.log.debug("adding %s to %s" % (self, self.mgr))
       self.mgr.add_instance(self)
-
 
   def get_cmd(self):
     """ Get cmd that launches instance """
@@ -264,12 +263,11 @@ class KVM:
         print("waiting for VM")
     raise StatusUnknown("KVM %s doesn't want to start" % self.name)
 
-
   def kill(self):
     """ Kill guest using all possible means """
     pid = self.is_running()
     if not pid:
-      return self.log.debug("He's Dead, Jim!")
+      return self.log.debug("It's Dead, Jim!")
     try:
       self.send_qmp("{'execute': 'quit'}")
       timeout = KILL_TIMEOUT
@@ -337,6 +335,15 @@ class KVM:
 
   def __repr__(self):
     return "KVM(\"{name}\")".format(name=self.name)
+
+  def __exit__(self):
+    self.shutdown()
+    for x in range(300):
+      time.sleep(0.1)
+      if not self.is_running():
+        return
+    self.log.critical("doesn't want to die, killing")
+    self.kill()
 
 
 class Bridged:
