@@ -32,7 +32,8 @@ def stringify(iterable):
 def gen_mac(check_unique=False):
   #TODO: check its uniqueness
   #from http://mediakey.dk/~cc/generate-random-mac-address-for-e-g-xen-guests/
-  mac = [ 0x02, 0x00, 0x00,
+  #mac = [ 0x02, 0x00, 0x00,
+  mac = [ 0x52, 0x54, 0x00,
   random.randint(0x00, 0xff),
   random.randint(0x00, 0xff),
   random.randint(0x00, 0xff) ]
