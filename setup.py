@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from distutils.core import setup
-from kvmc import __version__
+from libvmc import __version__
 setup(name='libvmc',
       version=str(__version__),
       author="Kandalintsev Alexandre",
