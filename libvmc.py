@@ -15,7 +15,7 @@ import time
 import sys
 import os
 
-__version__ = 10
+__version__ = 11
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -66,7 +66,9 @@ class Manager(CLI):
 
   @command("gen mac")
   def genmac(self):
-    print(gen_mac())
+    mac = gen_mac()
+    print(mac)
+    return mac
 
   @command("list")
   def do_list(self):
@@ -279,8 +281,11 @@ class KVM:
           return
     except Exception as err:
       self.log.critical("cannot kill normally: %s" % err)
-    self.log.critical("It doesn't want to die, killling by SIGKILL")
-    os.kill(pid, signal.SIGKILL)
+    self.log.critical("It doesn't want to die, killing by SIGKILL")
+    try:
+      os.kill(pid, signal.SIGKILL)
+    except ProcessLookupError:
+      pass
 
   def send_qmp(self, cmd):
     if isinstance(cmd, str):
@@ -313,8 +318,12 @@ class KVM:
     self.send_qmp(data)
 
   def shutdown(self):
+    """ Does not guarantee success """
     if self.is_running():
-      self.send_qmp('{"execute": "system_powerdown"}')
+      try:
+        self.send_qmp('{"execute": "system_powerdown"}')
+      except Exception as err:
+        self.log.critical("shutdown command failed with %s" % err)
   stop = shutdown  # stop is alias for shutdown
 
   def reset(self):
