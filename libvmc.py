@@ -192,7 +192,7 @@ class KVM:
   cores = 1
   cpu   = "qemu64"
   runas = None
-  cmd   = "qemu-system-x86_64 --enable-kvm -curses"
+  cmd   = "qemu-system-x86_64 -enable-kvm -curses"
   tmux  = TMUX(socket="virt", session="KVM")
   auto  = True
   net   = None
