@@ -9,4 +9,8 @@ setup(name='libvmc',
       license="GPLv3",
       description="KVM Commander, a tool to manage your virtual machines",
       py_modules=["libvmc"],
+      data_files=[
+        ('/usr/lib/systemd/system', ['vmc.service'])
+      ]
+
 )
