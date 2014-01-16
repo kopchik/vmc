@@ -15,7 +15,7 @@ import time
 import sys
 import os
 
-__version__ = 10
+__version__ = 11
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -32,7 +32,8 @@ def stringify(iterable):
 def gen_mac(check_unique=False):
   #TODO: check its uniqueness
   #from http://mediakey.dk/~cc/generate-random-mac-address-for-e-g-xen-guests/
-  mac = [ 0x02, 0x00, 0x00,
+  #mac = [ 0x02, 0x00, 0x00,
+  mac = [ 0x52, 0x54, 0x00,
   random.randint(0x00, 0xff),
   random.randint(0x00, 0xff),
   random.randint(0x00, 0xff) ]
@@ -65,7 +66,9 @@ class Manager(CLI):
 
   @command("gen mac")
   def genmac(self):
-    print(gen_mac())
+    mac = gen_mac()
+    print(mac)
+    return mac
 
   @command("list")
   def do_list(self):
@@ -189,7 +192,7 @@ class KVM:
   cores = 1
   cpu   = "qemu64"
   runas = None
-  cmd   = "qemu-system-x86_64 --enable-kvm -curses"
+  cmd   = "qemu-system-x86_64 -enable-kvm -curses"
   tmux  = TMUX(socket="virt", session="KVM")
   auto  = True
   net   = None
@@ -278,8 +281,11 @@ class KVM:
           return
     except Exception as err:
       self.log.critical("cannot kill normally: %s" % err)
-    self.log.critical("It doesn't want to die, killling by SIGKILL")
-    os.kill(pid, signal.SIGKILL)
+    self.log.critical("It doesn't want to die, killing by SIGKILL")
+    try:
+      os.kill(pid, signal.SIGKILL)
+    except ProcessLookupError:
+      pass
 
   def send_qmp(self, cmd):
     if isinstance(cmd, str):
@@ -312,8 +318,12 @@ class KVM:
     self.send_qmp(data)
 
   def shutdown(self):
+    """ Does not guarantee success """
     if self.is_running():
-      self.send_qmp('{"execute": "system_powerdown"}')
+      try:
+        self.send_qmp('{"execute": "system_powerdown"}')
+      except Exception as err:
+        self.log.critical("shutdown command failed with %s" % err)
   stop = shutdown  # stop is alias for shutdown
 
   def reset(self):
