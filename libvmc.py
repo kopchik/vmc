@@ -41,15 +41,15 @@ def gen_mac(check_unique=False):
 
 
 class UnknownInstance(Exception):
-  """no such machine"""
+  """ No such machine. """
 
 
 class StatusUnknown(Exception):
-  """cannot get status (permission problem, etc)"""
+  """ Cannot get status (permission problem, etc). """
 
 
 class Manager(CLI):
-  """ class to orchestrate several instances at once """
+  """ Class to orchestrate several instances at once. """
   def __init__(self, name="default"):
     self.instances = OrderedDict()
     self.name = name
@@ -57,7 +57,7 @@ class Manager(CLI):
 
   def add_instance(self, inst):
     assert inst.name not in self.instances, \
-      "we already have machine with the name %s" % inst.name
+      "we already have a machine with the name %s" % inst.name
     self.instances[inst.name] = inst
 
   def check_instance(self, name):
@@ -211,7 +211,7 @@ class KVM:
       self.mgr.add_instance(self)
 
   def get_cmd(self):
-    """ Get cmd that launches instance """
+    """ Get cmd that launches instance. """
     cmd = self.cmd
     cmd += " -name %s" % self.name
     cmd += " -m %s" % self.mem
@@ -267,7 +267,7 @@ class KVM:
     raise StatusUnknown("KVM %s doesn't want to start" % self.name)
 
   def kill(self):
-    """ Kill guest using all possible means """
+    """ Kill the guest using all possible means. """
     pid = self.is_running()
     if not pid:
       return self.log.debug("It's Dead, Jim!")
@@ -308,7 +308,7 @@ class KVM:
     self.tmux.attach(name=self.name)
 
   def reboot(self):
-    """ Send Ctrl+Alt+Del """
+    """ Send Ctrl+Alt+Del. """
     data = """{ "execute": "send-key",
         "arguments": { 'keys': [
           {'type':'qcode', 'data': 'ctrl'},
@@ -318,7 +318,7 @@ class KVM:
     self.send_qmp(data)
 
   def shutdown(self):
-    """ Does not guarantee success """
+    """ Attempt to do graceful shutdown. Success is not guaranteed. """
     if self.is_running():
       try:
         self.send_qmp('{"execute": "system_powerdown"}')
@@ -327,7 +327,7 @@ class KVM:
   stop = shutdown  # stop is alias for shutdown
 
   def reset(self):
-    """ Do hard reset """
+    """ Do hard reset. """
     self.send_qmp('{"execute": "system_reset"}')
 
   def format_status(self):
@@ -352,7 +352,7 @@ class KVM:
       time.sleep(0.1)
       if not self.is_running():
         return
-    self.log.critical("doesn't want to die, killing")
+    self.log.critical("it doesn't want to die, killing")
     self.kill()
 
 
