@@ -263,8 +263,8 @@ class KVM:
     for x in range(100):
         pid = self.is_running()
         if pid: break
-        time.sleep(0.1)
-        print("waiting for VM")
+        time.sleep(0.2)
+        self.log.debug("waiting for VM")
     else:
       raise StatusUnknown("KVM %s doesn't want to start" % self.name)
 

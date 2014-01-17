@@ -3,6 +3,7 @@ Description=autostart virtual instances
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/local/bin/vmc autostart
 
 ExecStop=/usr/local/bin/vmc shutdown all
