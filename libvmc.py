@@ -4,6 +4,7 @@ from useful.tmux import TMUX
 from useful.log import Log
 
 from collections import OrderedDict
+from subprocess import check_call
 from functools import reduce
 import argparse
 import warnings
@@ -15,7 +16,7 @@ import time
 import sys
 import os
 
-__version__ = 11
+__version__ = 12
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -198,6 +199,7 @@ class KVM:
   net   = None
   drives= None
   mgr   = manager  # assigned manager, this managed by metaclass
+  cpus  = None  # CPU affinity
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
@@ -260,10 +262,22 @@ class KVM:
 
     for x in range(100):
         pid = self.is_running()
-        if pid: return pid
+        if pid: break
         time.sleep(0.1)
         print("waiting for VM")
-    raise StatusUnknown("KVM %s doesn't want to start" % self.name)
+    else:
+      raise StatusUnknown("KVM %s doesn't want to start" % self.name)
+
+    if self.cpus:
+      cpulist = ",".join(map(str,self.cpus))
+      self.log.debug("setting CPU affinity to %s" % cpulist)
+      cmd = "taskset -a -c -p %s %s" % (cpulist, pid)
+      try:
+        check_call(cmd)
+      except Exception as e:
+        self.log.critical("set affinity with taskset failed: %s" % e)
+
+    return pid
 
   def reboot(self):
     """ Send Ctrl+Alt+Del. """
