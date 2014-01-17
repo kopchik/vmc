@@ -201,7 +201,6 @@ class KVM:
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
-    # self.name = self.name or self.__class__.__name__  # this assignment is in MetaKVM
     self.pidfile = "/var/tmp/kvm_%s.pid" % self.name
     self.monfile = "/var/tmp/kvm_%s.mon" % self.name
     self.log = Log("KVM %s" % self.name)
@@ -266,6 +265,29 @@ class KVM:
         print("waiting for VM")
     raise StatusUnknown("KVM %s doesn't want to start" % self.name)
 
+  def reboot(self):
+    """ Send Ctrl+Alt+Del. """
+    data = """{ "execute": "send-key",
+        "arguments": { 'keys': [
+          {'type':'qcode', 'data': 'ctrl'},
+          {'type':'qcode', 'data': 'alt'},
+          {'type':'qcode', 'data': 'delete'}
+          ]}}"""
+    self.send_qmp(data)
+
+  def reset(self):
+    """ Do hard reset. """
+    self.send_qmp('{"execute": "system_reset"}')
+
+  def shutdown(self):
+    """ Attempt to do graceful shutdown. Success is not guaranteed. """
+    if self.is_running():
+      try:
+        self.send_qmp('{"execute": "system_powerdown"}')
+      except Exception as err:
+        self.log.critical("shutdown command failed with %s" % err)
+  stop = shutdown  # stop is alias for shutdown
+
   def kill(self):
     """ Kill the guest using all possible means. """
     pid = self.is_running()
@@ -306,29 +328,6 @@ class KVM:
 
   def console(self):
     self.tmux.attach(name=self.name)
-
-  def reboot(self):
-    """ Send Ctrl+Alt+Del. """
-    data = """{ "execute": "send-key",
-        "arguments": { 'keys': [
-          {'type':'qcode', 'data': 'ctrl'},
-          {'type':'qcode', 'data': 'alt'},
-          {'type':'qcode', 'data': 'delete'}
-          ]}}"""
-    self.send_qmp(data)
-
-  def shutdown(self):
-    """ Attempt to do graceful shutdown. Success is not guaranteed. """
-    if self.is_running():
-      try:
-        self.send_qmp('{"execute": "system_powerdown"}')
-      except Exception as err:
-        self.log.critical("shutdown command failed with %s" % err)
-  stop = shutdown  # stop is alias for shutdown
-
-  def reset(self):
-    """ Do hard reset. """
-    self.send_qmp('{"execute": "system_reset"}')
 
   def format_status(self):
     formated = "%s\n" % self.name
