@@ -198,7 +198,7 @@ class KVM:
   auto  = True
   net   = None
   drives= None
-  mgr   = manager  # assigned manager, this managed by metaclass
+  mgr   = manager
   cpus  = None  # CPU affinity
 
   def __init__(self, **kwargs):
@@ -402,6 +402,11 @@ class Drive:
     cmd = "-drive file={path},if={iface},cache={cache}" \
           .format(path=self.path, iface=self.iface, cache=self.cache)
     return cmd
+
+
+class CDROM(Drive):
+  def __str__(self):
+    return super().__str__() + ",media=cdrom"
 
 
 def main(manager=manager):
