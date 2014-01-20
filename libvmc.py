@@ -22,13 +22,8 @@ POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
 log = Log("KVMC")
 
-#TODO: why reduce doesn't work?
 def stringify(iterable):
-  # return reduce(lambda x, y: str(x)+str(y)+" ", iterable)
-  r = ""
-  for it in iterable:
-    r += str(it)
-  return r+" "
+  return " ".join(map(str, iterable)) + ' '
 
 def gen_mac(check_unique=False):
   #TODO: check its uniqueness
