@@ -16,7 +16,7 @@ import time
 import sys
 import os
 
-__version__ = 12
+__version__ = 13
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -183,18 +183,21 @@ manager = Manager("")  # default manager
 
 
 class KVM:
-  name  = None
-  mem   = 256
-  cores = 1
-  cpu   = "qemu64"
-  runas = None
-  cmd   = "qemu-system-x86_64 -enable-kvm -curses"
-  tmux  = TMUX(socket="virt", session="KVM")
-  auto  = True
-  net   = None
-  drives= None
-  mgr   = manager
-  cpus  = None  # CPU affinity
+  name   = None
+  mem    = 256
+  cores  = 1
+  cpu    = "qemu64"
+  runas  = None
+  cmd    = "qemu-system-x86_64 -enable-kvm -curses"
+  tmux   = TMUX(socket="virt", session="KVM")
+  auto   = True
+  net    = None
+  drives = None
+  mgr    = manager
+  cpus   = None  # CPU affinity
+  kernel = None
+  append = None
+  initrd = None
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
@@ -221,6 +224,9 @@ class KVM:
       if os.geteuid() != 0:
         cmd = "sudo " + cmd
       cmd += " -runas %s" % self.runas
+    if self.kernel: cmd += " -kernel %s" % self.kernel
+    if self.append: cmd += " -append %s" % self.append
+    if self.initrd: cmd += " -initrd %s" % self.initrd
     return cmd
 
   def is_running(self):
