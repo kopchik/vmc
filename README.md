@@ -10,7 +10,7 @@ bridging functionality.
 
 Example of usage:
 
-1. Install it through **sudo python3 ./setup.py install** (or any other way recommended by your distro).
+1. Install it: **sudo python3 ./setup.py install** (or any other way recommended by your distro).
 
 1. Create an executable config like that:
 
@@ -25,22 +25,22 @@ class Default(KVM):
   cpu   = "phenom"
   cores = 1
   auto  = True  # start VM on autostart command
-  cmd   = "qemu-system-x86_64 --enable-kvm -curses"  # CMD to run
+  cmd   = "qemu-system-x86_64 -enable-kvm -curses"  # CMD to run
 
 
-stuff = Default(
-  name   = "stuff",
+virt1 = Default(
+  name   = "virt1",
   mem    = 1024,
-  drives = [Drive("/home/virtuals/stuff.raw")],
-  net    = [Bridged(ifname="stuff_ext", model='e1000', mac="00:50:56:00:37:24", br="extbr"),
-            Bridged(ifname="stuff_int", model='e1000', mac="52:54:19:12:34:59", br="intbr"),])
+  drives = [Drive("/home/virtuals/virt1.raw")],
+  net    = [Bridged(ifname="virt1_ext", model='e1000', mac="00:50:56:00:37:24", br="extbr"),
+            Bridged(ifname="virt1_int", model='e1000', mac="52:54:19:12:34:59", br="intbr"),])
 
 
-kliga = Default(
-  name   = "kliga",
+virt2 = Default(
+  name   = "virt2",
   mem    = 512,
-  drives = [Drive("/home/virtuals/kliga.raw")],
-  net    = [Bridged(ifname="kliga", model='e1000', mac="52:54:25:12:34:59", br="extbr")])
+  drives = [Drive("/home/virtuals/virt2.raw")],
+  net    = [Bridged(ifname="virt2", model='e1000', mac="52:54:25:12:34:59", br="extbr")])
 
 
 f __name__ == '__main__':
@@ -53,22 +53,22 @@ f __name__ == '__main__':
 
 ~~~
 [root@newmaster virtuals]# vmc status
-stuff
+virt1
   DOWN
 
-b00
+virt2
   DOWN
 
-[root@newmaster virtuals]# vmc start b00   # or you can do "vmc b00 as well"
-[root@newmaster virtuals]# vmc status b00
-b00
+[root@newmaster virtuals]# vmc start virt2   # or you can do "vmc virt2 as well"
+[root@newmaster virtuals]# vmc status virt2
+virt2
   UP (pid 31313)
 
 [root@newmaster virtuals]# vmc   # without arguments it will print status of all machines
-stuff
+virt1
   DOWN
 
-b00
+virt2
   UP (pid 31313)
 
 ~~~
