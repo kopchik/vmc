@@ -16,7 +16,7 @@ import time
 import sys
 import os
 
-__version__ = 13
+__version__ = 14
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -198,6 +198,7 @@ class KVM:
   kernel = None
   append = None
   initrd = None
+  boot   = None
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
@@ -227,6 +228,7 @@ class KVM:
     if self.kernel: cmd += " -kernel %s" % self.kernel
     if self.append: cmd += " -append %s" % self.append
     if self.initrd: cmd += " -initrd %s" % self.initrd
+    if self.boot:   cmd += " -boot %s" % self.boot
     return cmd
 
   def is_running(self):
