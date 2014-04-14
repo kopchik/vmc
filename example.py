@@ -18,6 +18,5 @@ lor = Default(
   drives = [Drive("/home/exe/lor.qcow2",
             iface="ide", cache="unsafe")])
 
-
 if __name__ == '__main__':
   main()

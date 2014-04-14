@@ -231,6 +231,9 @@ class KVM:
     if self.append: cmd += " -append %s" % self.append
     if self.initrd: cmd += " -initrd %s" % self.initrd
     if self.boot:   cmd += " -boot %s" % self.boot
+    if self.devices:
+      for device in self.devices:
+        cmd += " %s" % device
     return cmd
 
   def is_running(self):
@@ -386,7 +389,13 @@ class Usernet:
     return cmd
 
 
-class Bridged:
+class Device:
+  def info(self):
+    ",".join("%s=%s"%(k,v) \
+             for k,v in self.__dict__.items())
+
+
+class Bridged(Device):
   # TODO: make input validation
   def __init__(self, ifname, model, mac, br, helper=None):
     self.model = model
@@ -409,7 +418,7 @@ class Bridged:
     return cmd
 
 
-class Drive:
+class Drive(Device):
   def __init__(self, path, iface="virtio", cache="writeback", master=None):
     self.path  = path
     self.cache = cache
@@ -418,13 +427,14 @@ class Drive:
       assert master.endswith(".qcow2"), "can clone only *.qcow2 images"
     self.master = master
 
-  def do_create_storage(self, force=False):
+  def _create_storage(self, force=False):
     if self.master:
       if not os.path.exists(self.path) or force:
         cmd = "qemu-img create -f qcow2 -b {master} {path}"
-        check_call(cmd.format(master=self.master, path=self.path)
+        check_call(cmd.format(master=self.master, path=self.path))
 
   def __str__(self):
+    self._create_storage()
     cmd = "-drive file={path},if={iface},cache={cache}" \
           .format(path=self.path, iface=self.iface, cache=self.cache)
     return cmd
