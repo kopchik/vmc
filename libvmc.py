@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from useful.cli  import CLI, command
 from useful.tmux import TMUX
+from useful.mstring import s
 from useful.log import Log
 
 from collections import OrderedDict
@@ -16,7 +17,7 @@ import time
 import sys
 import os
 
-__version__ = 14
+__version__ = 15
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -199,6 +200,7 @@ class KVM:
   append = None
   initrd = None
   boot   = None
+  devices = None
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
@@ -372,6 +374,18 @@ class KVM:
     self.kill()
 
 
+class Usernet:
+  def __init__(self, net="10.10.10.10/24", host="10.10.10.1", hostname="vmcguest", dns="8.8.8.8"):
+    self.net = net
+    self.host = host
+    self.dns = dns
+
+  def __str__(self):
+    cmd = " -net user,net={net},host={host},hostname={hostname},dns={dns}" \
+          .format(net=self.net, host=self.host, hostname=self.hostname, dns=self.dns)
+    return cmd
+
+
 class Bridged:
   # TODO: make input validation
   def __init__(self, ifname, model, mac, br, helper=None):
@@ -396,10 +410,19 @@ class Bridged:
 
 
 class Drive:
-  def __init__(self, path, iface="virtio", cache="writeback"):
+  def __init__(self, path, iface="virtio", cache="writeback", master=None):
     self.path  = path
     self.cache = cache
     self.iface = iface
+    if master:
+      assert master.endswith(".qcow2"), "can clone only *.qcow2 images"
+    self.master = master
+
+  def do_create_storage(self, force=False):
+    if self.master:
+      if not os.path.exists(self.path) or force:
+        cmd = "qemu-img create -f qcow2 -b {master} {path}"
+        check_call(cmd.format(master=self.master, path=self.path)
 
   def __str__(self):
     cmd = "-drive file={path},if={iface},cache={cache}" \
