@@ -128,6 +128,7 @@ class Manager(CLI):
     self.check_instance(name)
     self.instances[name].reset()
 
+  @command("killall")
   @command("kill all")
   def kill_all(self):
     self.log.critical("KILLING ALL instances (even with auto=False)")
