@@ -13,6 +13,7 @@ import random
 import socket
 import signal
 import errno
+import shlex
 import time
 import sys
 import os
@@ -25,6 +26,9 @@ log = Log("KVMC")
 
 def stringify(iterable):
   return " ".join(map(str, iterable)) + ' '
+
+def run(cmd):
+  check_call(shlex.split(cmd))
 
 def gen_mac(check_unique=False):
   #TODO: check its uniqueness
@@ -281,7 +285,7 @@ class KVM:
       self.log.debug("setting CPU affinity to %s" % cpulist)
       cmd = "taskset -a -c -p %s %s" % (cpulist, pid)
       try:
-        check_call(cmd)
+        run(cmd)
       except Exception as e:
         self.log.critical("set affinity with taskset failed: %s" % e)
 
@@ -431,7 +435,8 @@ class Drive(Device):
     if self.master:
       if not os.path.exists(self.path) or force:
         cmd = "qemu-img create -f qcow2 -b {master} {path}"
-        check_call(cmd.format(master=self.master, path=self.path))
+        cmd = cmd.format(master=self.master, path=self.path)
+        run(cmd)
 
   def __str__(self):
     self._create_storage()
