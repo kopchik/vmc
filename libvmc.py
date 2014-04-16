@@ -18,7 +18,7 @@ import time
 import sys
 import os
 
-__version__ = 15
+__version__ = 16
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -51,6 +51,8 @@ class StatusUnknown(Exception):
 
 class Manager(CLI):
   """ Class to orchestrate several instances at once. """
+  autostart_delay = 3
+
   def __init__(self, name="default"):
     self.instances = OrderedDict()
     self.name = name
@@ -90,7 +92,7 @@ class Manager(CLI):
         continue
       log.info("Starting %s" % instance)
       instance.start()
-      sleep = 3
+      sleep = self.autostart_delay
 
   @command("[name] start")
   @command("start [name]")
@@ -305,6 +307,14 @@ class KVM:
   def reset(self):
     """ Do hard reset. """
     self.send_qmp('{"execute": "system_reset"}')
+
+  def freeze(self):
+    """ stop virtual CPU """
+    self.send_qmp('{"execute": "stop"}')
+  
+  def unfreeze(self):
+    """ resume after freeze """
+    self.send_qmp('{"execute": "cont"}')
 
   def shutdown(self):
     """ Attempt to do graceful shutdown. Success is not guaranteed. """
