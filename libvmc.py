@@ -5,7 +5,9 @@ from useful.mstring import s
 from useful.log import Log
 
 from collections import OrderedDict
-from subprocess import check_call
+from subprocess import check_call, CalledProcessError
+from os.path import isfile, isdir
+from os import listdir
 from functools import reduce
 import argparse
 import warnings
@@ -18,7 +20,7 @@ import time
 import sys
 import os
 
-__version__ = 16
+__version__ = 17
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -392,6 +394,37 @@ class KVM:
     self.kill()
 
 
+class Bridge:
+  def __init__(name, ifs=[]):
+    assert len(name) < 16, "too long ifname"  # linux/if.h#IFNAMSIZ
+    self.name = name
+    self.ifs = ifs
+    self.create()
+    self.add_ifs(self.ifs)
+
+  def created(self):
+    return isdir('/sys/class/net/%s/bridge' % self.name)
+
+  def get_cur_ifs(self):
+    if not self.created(): return []
+    return [iface for iface in os.listdir('/sys/class/net/%s/brif' % self.name)]
+
+  def add_ifs(self, ifs):
+    cur = self.get_cur_ifs()
+    for interface in ifs:
+      if interface not in cur:
+        check_call(['brctl', 'addif', bridge, interface])
+
+  def create():
+    if self.created(): return
+    check_call(['brctl', 'addbr', bridge])
+
+  def del_bridge(bridge):
+    brctl = 'brctl'
+    check_call([brctl, 'delbr', bridge])
+
+
+
 class Usernet:
   def __init__(self, net="10.10.10.10/24", host="10.10.10.1", hostname="vmcguest", dns="8.8.8.8"):
     self.net = net
@@ -413,6 +446,8 @@ class Device:
 class Bridged(Device):
   # TODO: make input validation
   def __init__(self, ifname, model, mac, br, helper=None):
+    if isinstance(br, Bridge):
+      br = br.name
     self.model = model
     self.mac   = mac
     self.br    = br
