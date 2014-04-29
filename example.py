@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-from libvmc import KVM, Bridged, Drive, main
+from libvmc import KVM, Bridge, Bridged, Drive, main
+
+intbr = Bridge('intbr')
 
 class Default(KVM):
   mem   = 384
@@ -14,7 +16,7 @@ lor = Default(
   name = "lor",
   mem  = 2048,
   net  = [Bridged(ifname="lor", model='virtio-net',
-         mac="52:54:16:12:34:66", br="intbr")],
+         mac="52:54:16:12:34:66", br=intbr)],
   drives = [Drive("/home/exe/lor.qcow2",
             iface="ide", cache="unsafe")])
 

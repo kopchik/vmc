@@ -38,7 +38,7 @@ def gen_mac(unique=True):
          random.randint(0x00, 0xff),
          random.randint(0x00, 0xff),
          random.randint(0x00, 0xff) ]
-  mac  ':'.join(map(lambda x: "%02x" % x, mac))
+  mac = ':'.join(map(lambda x: "%02x" % x, mac))
   if unique and not is_mac_unique(mac):
     return gen_mac(unique)
 
@@ -399,7 +399,7 @@ class KVM:
 
 
 class Bridge:
-  def __init__(name, ifs=[]):
+  def __init__(self, name, ifs=[]):
     assert len(name) < 16, "too long ifname"  # linux/if.h#IFNAMSIZ
     self.name = name
     self.ifs = ifs
@@ -419,13 +419,13 @@ class Bridge:
       if interface not in cur:
         check_call(['brctl', 'addif', bridge, interface])
 
-  def create():
+  def create(self):
     if self.created(): return
-    check_call(['brctl', 'addbr', bridge])
+    check_call(['brctl', 'addbr', self.name])
 
   def del_bridge(bridge):
     brctl = 'brctl'
-    check_call([brctl, 'delbr', bridge])
+    check_call([brctl, 'delbr', self.name])
 
 
 
