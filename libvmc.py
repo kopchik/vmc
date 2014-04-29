@@ -32,15 +32,19 @@ def stringify(iterable):
 def run(cmd):
   check_call(shlex.split(cmd))
 
-def gen_mac(check_unique=False):
-  #TODO: check its uniqueness
-  #from http://mediakey.dk/~cc/generate-random-mac-address-for-e-g-xen-guests/
+def gen_mac(unique=True):
   #mac = [ 0x02, 0x00, 0x00,
-  mac = [ 0x52, 0x54, 0x00,
-  random.randint(0x00, 0xff),
-  random.randint(0x00, 0xff),
-  random.randint(0x00, 0xff) ]
-  return ':'.join(map(lambda x: "%02x" % x, mac))
+  mac = [0x52, 0x54, 0x00,
+         random.randint(0x00, 0xff),
+         random.randint(0x00, 0xff),
+         random.randint(0x00, 0xff) ]
+  mac  ':'.join(map(lambda x: "%02x" % x, mac))
+  if unique and not is_mac_unique(mac):
+    return gen_mac(unique)
+
+def is_mac_unique(mac):
+  return mac not in [open('/sys/class/net/%s/address' % iface).readlines()[0].strip()
+                     for iface in listdir('/sys/class/net')]
 
 
 class UnknownInstance(Exception):
