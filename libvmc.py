@@ -448,12 +448,12 @@ class Bridged(Device):
   def __init__(self, ifname, model, mac, br, helper=None):
     if isinstance(br, Bridge):
       br = br.name
-    self.model = model
-    self.mac   = mac
-    self.br    = br
-    self.helper= helper
+    self.model  = model
+    self.mac    = mac
+    self.br     = br
+    self.helper = helper
     assert len(ifname) < 16, "too long ifname"  # linux/if.h#IFNAMSIZ
-    self.ifname= ifname
+    self.ifname = ifname
 
   def __str__(self):
     cmd  = " -device {model},mac={mac},netdev={id}" \
