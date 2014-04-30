@@ -406,11 +406,8 @@ class Bridge:
     self.create()
     self.add_ifs(self.ifs)
 
-  def created(self):
-    return isdir('/sys/class/net/%s/bridge' % self.name)
-
   def get_cur_ifs(self):
-    if not self.created(): return []
+    if not self.is_created(): return []
     return [iface for iface in os.listdir('/sys/class/net/%s/brif' % self.name)]
 
   def add_ifs(self, ifs):
@@ -420,8 +417,11 @@ class Bridge:
         check_call(['brctl', 'addif', bridge, interface])
 
   def create(self):
-    if self.created(): return
+    if self.is_created(): return
     check_call(['brctl', 'addbr', self.name])
+
+  def is_created(self):
+    return isdir('/sys/class/net/%s/bridge' % self.name)
 
   def del_bridge(bridge):
     brctl = 'brctl'
