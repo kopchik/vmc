@@ -8,7 +8,7 @@ class Default(KVM):
   mem   = 384
   cpu   = "phenom"
   cores = 1
-  cmd   = "qemu-system-x86_64 --enable-kvm -curses"
+  cmd   = "qemu-system-x86_64 -enable-kvm -curses"
   auto  = False
 
 
