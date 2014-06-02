@@ -136,6 +136,12 @@ class Manager(CLI):
     self.check_instance(name)
     self.instances[name].reset()
 
+  @command("unfreeze all")
+  @command("defrost all")
+  def kill_all(self):
+    for inst in self.instances.values():
+      inst.unfreeze()
+
   @command("killall")
   @command("kill all")
   def kill_all(self):
