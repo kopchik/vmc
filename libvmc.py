@@ -228,7 +228,7 @@ class KVM:
     self.log = Log("KVM %s" % self.name)
     assert self.name, "name is mandatory"
     if self.mgr:
-      self.log.debug("adding %s to %s" % (self, self.mgr))
+      #self.log.debug("adding %s to %s" % (self, self.mgr))
       self.mgr.add_instance(self)
 
   def get_cmd(self):
@@ -363,11 +363,12 @@ class KVM:
       cmd = cmd.encode()
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.settimeout(1)
-    self.log.debug("connecting to %s" % self.monfile)
+    #self.log.debug("connecting to %s" % self.monfile)
     s.connect(self.monfile)
     s.send(b'{"execute": "qmp_capabilities"}')  # handshake
     answer = s.recv(BUF_SIZE)
     #self.log.debug(answer.decode(errors='replace'))
+    #self.log.debug("sending cmd %s" % cmd)
     s.send(cmd)
     answer = s.recv(BUF_SIZE)
     if len(answer) == BUF_SIZE:
