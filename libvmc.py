@@ -362,7 +362,7 @@ class KVM:
     if isinstance(cmd, str):
       cmd = cmd.encode()
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.settimeout(1)
+    s.settimeout(10)
     #self.log.debug("connecting to %s" % self.monfile)
     s.connect(self.monfile)
     s.send(b'{"execute": "qmp_capabilities"}')  # handshake
