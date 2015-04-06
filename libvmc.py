@@ -5,10 +5,9 @@ from useful.mstring import s
 from useful.log import Log
 
 from collections import OrderedDict
-from subprocess import check_call, CalledProcessError
-from os.path import isfile, isdir
+from subprocess import check_call, DEVNULL
+from os.path import isdir
 from os import listdir
-from functools import reduce
 import argparse
 import warnings
 import random
@@ -20,7 +19,7 @@ import time
 import sys
 import os
 
-__version__ = 17
+__version__ = 19
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
@@ -29,8 +28,9 @@ log = Log("KVMC")
 def stringify(iterable):
   return " ".join(map(str, iterable)) + ' '
 
-def run(cmd):
-  check_call(shlex.split(cmd))
+def run(cmd, stdout=None):
+  cmd = shlex.split(cmd)
+  check_call(cmd, stdout=stdout)
 
 def gen_mac(unique=True):
   #mac = [ 0x02, 0x00, 0x00,
@@ -107,7 +107,7 @@ class Manager(CLI):
     self.log.debug("Starting %s" % name)
     self.check_instance(name)
     inst = self.instances[name]
-    pid = inst.start()
+    inst.start()
     return inst
 
   @command("stop all")
@@ -138,7 +138,7 @@ class Manager(CLI):
 
   @command("unfreeze all")
   @command("defrost all")
-  def kill_all(self):
+  def kill_defrost(self):
     for inst in self.instances.values():
       inst.unfreeze()
 
@@ -226,6 +226,7 @@ class KVM:
     self.pidfile = "/var/tmp/kvm_%s.pid" % self.name
     self.monfile = "/var/tmp/kvm_%s.mon" % self.name
     self.log = Log("KVM %s" % self.name)
+    self.qmpsock = None
     assert self.name, "name is mandatory"
     if self.mgr:
       #self.log.debug("adding %s to %s" % (self, self.mgr))
@@ -300,7 +301,7 @@ class KVM:
       self.log.debug("setting CPU affinity to %s" % cpulist)
       cmd = "taskset -a -c -p %s %s" % (cpulist, pid)
       try:
-        run(cmd)
+        run(cmd, stdout=DEVNULL)
       except Exception as e:
         self.log.critical("set affinity with taskset failed: %s" % e)
 
@@ -344,6 +345,7 @@ class KVM:
       return self.log.debug("It's Dead, Jim!")
     try:
       self.send_qmp("{'execute': 'quit'}")
+      self.qmp_disconnect()
       timeout = KILL_TIMEOUT
       while timeout > 0:
         time.sleep(POLL_INTERVAL)
@@ -351,29 +353,42 @@ class KVM:
         if not self.is_running():
           return
     except Exception as err:
-      self.log.critical("cannot kill normally: %s" % err)
+      self.log.critical("cannot send qmp command: %s" % err)
     self.log.critical("It doesn't want to die, killing by SIGKILL")
     try:
       os.kill(pid, signal.SIGKILL)
     except ProcessLookupError:
       pass
 
+  def qmp_connect(self):
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.settimeout(3)
+    #self.log.debug("connecting to %s" % self.monfile)
+    s.connect(self.monfile)
+    answer = s.recv(BUF_SIZE)
+    #self.log.debug("initial handshake: %s" % answer.decode(errors='replace'))
+    s.send(b'{"execute": "qmp_capabilities"}')  # handshake
+    answer = s.recv(BUF_SIZE)
+    #self.log.debug("capabilities: %s" % answer.decode(errors='replace'))
+
+    self.qmpsock = s
+
+  def qmp_disconnect(self):
+    if self.qmpsock:
+      self.qmpsock.close()
+      self.qmpsock = None
+
   def send_qmp(self, cmd):
     if isinstance(cmd, str):
       cmd = cmd.encode()
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.settimeout(10)
-    #self.log.debug("connecting to %s" % self.monfile)
-    s.connect(self.monfile)
-    s.send(b'{"execute": "qmp_capabilities"}')  # handshake
-    answer = s.recv(BUF_SIZE)
-    #self.log.debug(answer.decode(errors='replace'))
+    if not self.qmpsock:
+      self.qmp_connect()
     #self.log.debug("sending cmd %s" % cmd)
-    s.send(cmd)
-    answer = s.recv(BUF_SIZE)
+    self.qmpsock.send(cmd)
+    answer = self.qmpsock.recv(BUF_SIZE)
     if len(answer) == BUF_SIZE:
       self.log.error("too long answer was truncated :(")
-    #self.log.debug(answer.decode(errors='replace'))
+    #self.log.debug("result: %s" % answer.decode(errors='replace'))
     return answer
 
   def console(self):
@@ -421,7 +436,7 @@ class Bridge:
     cur = self.get_cur_ifs()
     for interface in ifs:
       if interface not in cur:
-        check_call(['brctl', 'addif', bridge, interface])
+        check_call(['brctl', 'addif', self.name, interface])
 
   def create(self):
     if self.is_created(): return
@@ -430,7 +445,7 @@ class Bridge:
   def is_created(self):
     return isdir('/sys/class/net/%s/bridge' % self.name)
 
-  def del_bridge(bridge):
+  def del_bridge(self):
     brctl = 'brctl'
     check_call([brctl, 'delbr', self.name])
 
