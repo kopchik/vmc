@@ -219,7 +219,7 @@ class KVM:
   append = None
   initrd = None
   boot   = None
-  devices = None
+  devs   = None
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
@@ -251,8 +251,8 @@ class KVM:
     if self.append: cmd += " -append %s" % self.append
     if self.initrd: cmd += " -initrd %s" % self.initrd
     if self.boot:   cmd += " -boot %s" % self.boot
-    if self.devices:
-      for device in self.devices:
+    if self.devs:
+      for device in self.devs:
         cmd += " %s" % device
     return cmd
 
@@ -284,6 +284,9 @@ class KVM:
     if self.is_running():
       self.log.debug("Instance is already started!")
       return False
+
+    for device in self.devs:
+      device.on_start(self)
 
     self.log.debug("spawning %s" % self.get_cmd())
     self.tmux.run(self.get_cmd(), name=self.name)
@@ -324,7 +327,7 @@ class KVM:
   def freeze(self):
     """ stop virtual CPU """
     self.send_qmp('{"execute": "stop"}')
-  
+
   def unfreeze(self):
     """ resume after freeze """
     self.send_qmp('{"execute": "cont"}')
@@ -336,6 +339,8 @@ class KVM:
         self.send_qmp('{"execute": "system_powerdown"}')
       except Exception as err:
         self.log.critical("shutdown command failed with %s" % err)
+    for device in self.devs:
+      device.on_stop()
   stop = shutdown  # stop is alias for shutdown
 
   def kill(self):
@@ -359,6 +364,8 @@ class KVM:
       os.kill(pid, signal.SIGKILL)
     except ProcessLookupError:
       pass
+    for device in self.devs:
+      device.on_kill(self)
 
   def qmp_connect(self):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -468,6 +475,15 @@ class Device:
     ",".join("%s=%s"%(k,v) \
              for k,v in self.__dict__.items())
 
+  def on_start(self, kvm):
+    pass
+
+  def on_stop(self, kvm):
+    pass
+
+  def on_kill(self, kvm):
+    pass
+
 
 class Bridged(Device):
   # TODO: make input validation
@@ -504,9 +520,14 @@ class Drive(Device):
     self.master = master
     self.temp = temp
 
-  def on_kill(self):
+  def on_kill(self, kvm):
     if self.temp:
       self._destroy_storage()
+  on_stop = on_kill
+
+  def on_start(self, kvm):
+    self._create_storage()
+
 
   def _destroy_storage(self):
     try:
@@ -522,7 +543,6 @@ class Drive(Device):
         run(cmd)
 
   def __str__(self):
-    self._create_storage()
     cmd = "-drive file={path},if={iface},cache={cache}" \
           .format(path=self.path, iface=self.iface, cache=self.cache)
     return cmd
