@@ -495,13 +495,24 @@ class Bridged(Device):
 
 
 class Drive(Device):
-  def __init__(self, path, iface="virtio", cache="writeback", master=None):
+  def __init__(self, path, iface="virtio", cache="writeback", master=None, temp=False):
     self.path  = path
     self.cache = cache
     self.iface = iface
     if master:
       assert master.endswith(".qcow2"), "can clone only *.qcow2 images"
     self.master = master
+    self.temp = temp
+
+  def on_kill(self):
+    if self.temp:
+      self._destroy_storage()
+
+  def _destroy_storage(self):
+    try:
+      os.remove(self.path)
+    except FileNotFoundError:
+      pass
 
   def _create_storage(self, force=False):
     if self.master:
