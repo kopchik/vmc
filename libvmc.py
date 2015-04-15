@@ -340,7 +340,7 @@ class KVM:
       except Exception as err:
         self.log.critical("shutdown command failed with %s" % err)
     for device in self.devs:
-      device.on_stop()
+      device.on_stop(self)
   stop = shutdown  # stop is alias for shutdown
 
   def kill(self):
