@@ -345,6 +345,9 @@ class KVM:
 
   def kill(self):
     """ Kill the guest using all possible means. """
+    for device in self.devs:
+      device.on_kill(self)
+
     pid = self.is_running()
     if not pid:
       return self.log.debug("It's Dead, Jim!")
@@ -359,13 +362,13 @@ class KVM:
           return
     except Exception as err:
       self.log.critical("cannot send qmp command: %s" % err)
+
     self.log.critical("It doesn't want to die, killing by SIGKILL")
+
     try:
       os.kill(pid, signal.SIGKILL)
     except ProcessLookupError:
       pass
-    for device in self.devs:
-      device.on_kill(self)
 
   def qmp_connect(self):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
