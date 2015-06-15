@@ -300,15 +300,22 @@ class KVM:
       raise StatusUnknown("KVM %s doesn't want to start" % self.name)
 
     if self.cpus:
-      cpulist = ",".join(map(str,self.cpus))
-      self.log.debug("setting CPU affinity to %s" % cpulist)
-      cmd = "taskset -a -c -p %s %s" % (cpulist, pid)
-      try:
-        run(cmd, stdout=DEVNULL)
-      except Exception as e:
-        self.log.critical("set affinity with taskset failed: %s" % e)
+      self.set_cpus(self.cpus)
 
     return pid
+
+  def set_cpus(self, cpus):
+    self.cpus = cpus
+    pid = self.pid
+    if not pid:
+      return self.log.critical("VM is not running, not setting affinity")
+    cpulist = ",".join(map(str,self.cpus))
+    self.log.debug("setting CPU affinity to %s" % cpulist)
+    cmd = "taskset -a -c -p %s %s" % (cpulist, pid)
+    try:
+      run(cmd, stdout=DEVNULL)
+    except Exception as e:
+      self.log.critical("set affinity with taskset failed: %s" % e)
 
   def reboot(self):
     """ Send Ctrl+Alt+Del. """
