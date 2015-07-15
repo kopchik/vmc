@@ -357,7 +357,8 @@ class KVM:
 
     pid = self.is_running()
     if not pid:
-      return self.log.debug("It's Dead, Jim!")
+      self.log.debug("It's Dead, Jim!")
+      return False
     try:
       self.send_qmp("{'execute': 'quit'}")
       self.qmp_disconnect()
@@ -366,7 +367,7 @@ class KVM:
         time.sleep(POLL_INTERVAL)
         timeout -= POLL_INTERVAL
         if not self.is_running():
-          return
+          return 1
     except Exception as err:
       self.log.critical("cannot send qmp command: %s" % err)
 
@@ -376,6 +377,8 @@ class KVM:
       os.kill(pid, signal.SIGKILL)
     except ProcessLookupError:
       pass
+
+    return 2
 
   def qmp_connect(self):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
