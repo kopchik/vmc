@@ -19,7 +19,7 @@ import time
 import sys
 import os
 
-__version__ = 19
+__version__ = 20
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
