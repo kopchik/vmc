@@ -219,7 +219,7 @@ class KVM:
   append = None
   initrd = None
   boot   = None
-  devs   = None
+  devs   = []
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
@@ -556,8 +556,11 @@ class Drive(Device):
         run(cmd)
 
   def __str__(self):
-    cmd = "-drive file={path},if={iface},cache={cache}" \
-          .format(path=self.path, iface=self.iface, cache=self.cache)
+    extra = ""
+    if self.path.endswith(".raw"):
+      extra += ",format=raw"
+    cmd = "-drive file={path},if={iface},cache={cache}{extra}" \
+          .format(path=self.path, iface=self.iface, cache=self.cache, extra=extra)
     return cmd
 
 
