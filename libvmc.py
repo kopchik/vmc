@@ -357,7 +357,7 @@ class KVM:
 
     pid = self.is_running()
     if not pid:
-      self.log.debug("It's Dead, Jim!")
+      self.log.debug("%s: It's Dead, Jim!" % self)
       return False
     try:
       self.send_qmp("{'execute': 'quit'}")
