@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from useful.cli  import CLI, command
 from useful.tmux import TMUX
-from useful.mstring import s
 from useful.log import Log
 
 from collections import OrderedDict
 from subprocess import check_call, DEVNULL
 from os.path import isdir
 from os import listdir
+import os.path
 import argparse
 import warnings
 import random
@@ -19,10 +19,11 @@ import time
 import sys
 import os
 
-__version__ = 20
+__version__ = 21
 KILL_TIMEOUT = 10
 POLL_INTERVAL = 0.1
 BUF_SIZE = 65535
+PREFIX = "/var/vmc/"
 log = Log("KVMC")
 
 def stringify(iterable):
@@ -223,8 +224,8 @@ class KVM:
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
-    self.pidfile = "/var/tmp/kvm_%s.pid" % self.name
-    self.monfile = "/var/tmp/kvm_%s.mon" % self.name
+    self.pidfile = os.path.join(PREFIX, "kvm_%s.pid"%self.name)
+    self.monfile = os.path.join(PREFIX, "kvm_%s.mon"%self.name)
     self.log = Log("KVM %s" % self.name)
     self.qmpsock = None
     assert self.name, "name is mandatory"
